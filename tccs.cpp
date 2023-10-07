@@ -1168,7 +1168,7 @@ void PClapse(int Ts, int Te, int k, clapsefunc func, const char* graph_name)
 	printf("([%d, %d], %d, %s, %s) on %s:%lldns\n", Ts, Te, k, XMEAN_S[X_MEANING::USER_ENGAGEMENT], QUERY_TYPE[T_QUERY::OPTIMIZING], graph_name, clapse_ns.count());
 }
 
-void PClapse_ZPar_O(int Ts, int Te, int k, const char* graph_name)//½«TxCQ ([Ts,Te], k)µÄÖ´ĞĞÊ±¼ä´òÓ¡µ½ÖÕ¶Ë£¬µ¥Î»ÎªÄÉÃë
+void PClapse_ZPar_O(int Ts, int Te, int k, const char* graph_name)
 {
 	buildtel(Ts, Te);
 	initMH(Ts, Te);
@@ -1180,14 +1180,14 @@ void PClapse_ZPar_O(int Ts, int Te, int k, const char* graph_name)//½«TxCQ ([Ts,
 			QUERY_TYPE[T_QUERY::OPTIMIZING], graph_name, clapse_ns.count(), zone_set.size());
 }
 
-void PClapse_TXCQ_2Phase(int Ts, int Te, int k, const char* graph_name)//½«TxCQ ([Ts,Te], k)µÄÖ´ĞĞÊ±¼ä´òÓ¡µ½ÖÕ¶Ë£¬µ¥Î»ÎªÄÉÃë
+void PClapse_TXCQ_2Phase(int Ts, int Te, int k, const char* graph_name)
 {
 	buildtel(Ts, Te);
 	initMH(Ts, Te);
 	auto t_start = system_clock::now();
 	ZPar_O(Ts, Te, k);
 	auto t_final1 = system_clock::now();
-	ZRev(X_MEANING::USER_ENGAGEMENT, X_PROPERTY::TIME_INCREASING, T_QUERY::OPTIMIZING, k, 0.6);//±ä¸ü²âÊÔXµÄº¬ÒåµÄÊ±ºò´Ë´¦ĞèÒªĞŞ¸Ä²ÎÊı
+	ZRev(X_MEANING::USER_ENGAGEMENT, X_PROPERTY::TIME_INCREASING, T_QUERY::OPTIMIZING, k, 0.6);
 	auto t_final2 = system_clock::now();
 	auto clapse_ns_ph1 = duration_cast<nanoseconds>(t_final1 - t_start);
 	auto clapse_ns_tot = duration_cast<nanoseconds>(t_final2 - t_start);
@@ -1397,70 +1397,69 @@ void lg_construct(EF_Index* ef)
 	ef->lineage_graph = new L_NODE[number_of_time_zone];
 	ef->number_of_lineage_node = number_of_time_zone;
 	int lineage_node_id = 0;
-	std::unordered_map<TTI, int, pair_hash> tti_to_node;//TTIµ½lineage node idµÄÓ³Éä
-																		//ÓÃÓÚºóĞøÀûÓÃzone adjacency¹¹½¨lineage connection
-	for (auto time_zone : zone_set)//³õÊ¼»¯ËùÓĞtime zone¶ÔÓ¦µÄlineage node
+	std::unordered_map<TTI, int, pair_hash> tti_to_node;
+	for (auto time_zone : zone_set)
 	{
 		TTI tti = time_zone.first;
-		ef->lineage_graph[lineage_node_id].ts = tti.first;//³õÊ¼»¯ttiÆğÊ¼Ê±¿Ì
-		ef->lineage_graph[lineage_node_id].te = tti.second;//³õÊ¼»¯ttiÖÕÖ¹Ê±¿Ì
-		ef->lineage_graph[lineage_node_id].weight = distinct_core_sz[tti];//³õÊ¼»¯time zone¶ÔÓ¦distinct core½ÚµãÊı
-		tti_to_node[tti] = lineage_node_id;//±£´ættiµ½lineage node idµÄÓ³Éä£¬ÓÃÓÚºóĞø½¨±ß
+		ef->lineage_graph[lineage_node_id].ts = tti.first;
+		ef->lineage_graph[lineage_node_id].te = tti.second;
+		ef->lineage_graph[lineage_node_id].weight = distinct_core_sz[tti];
+		tti_to_node[tti] = lineage_node_id;
 		lineage_node_id++;
 	}
-	for (int node_id = 0; node_id < ef->number_of_lineage_node; ++node_id)//±éÀúËùÓĞlineage node½¨±ß
+	for (int node_id = 0; node_id < ef->number_of_lineage_node; ++node_id)
 	{
-		TTI tti = { ef->lineage_graph[node_id].ts, ef->lineage_graph[node_id].te };//»ñÈ¡Õâ¸önodeµÄTTI
-		LTI list_of_lti = zone_set[tti];//»ñÈ¡Õâ¸önodeµÄLTIÁĞ±í
-		int number_of_connection_to_tti = list_of_lti.size() + 1;//ÔÚlineage graphÖĞÕâ¸önodeÇ°ÁÚ¾Ó½ÚµãµÄÊıÁ¿
-																 //=Õâ¸ötime zoneµÄltiÊıÁ¿+1
-		sort(list_of_lti.begin(), list_of_lti.end());//°ÑLTI°´ÕÕts´ÓĞ¡µ½´óÅÅĞò
-		for (int i = 0; i < number_of_connection_to_tti; ++i)//ÒÀ´Î»ñÈ¡Õâ¸ö½ÚµãÃ¿¸ö×æÏÈÁÚ¾ÓµÄTTI=time zone°¼½ÇµÄcell
+		TTI tti = { ef->lineage_graph[node_id].ts, ef->lineage_graph[node_id].te };
+		LTI list_of_lti = zone_set[tti];//è·å–è¿™ä¸ªnodeçš„LTIåˆ—è¡¨
+		int number_of_connection_to_tti = list_of_lti.size() + 1;
+																 
+		sort(list_of_lti.begin(), list_of_lti.end());
+		for (int i = 0; i < number_of_connection_to_tti; ++i)
 		{
 			int ts = i == number_of_connection_to_tti - 1 ? tti.first : list_of_lti[i].first - 1;
 			int te = i == 0 ? tti.second : list_of_lti[i - 1].second + 1;
-			if (ts < ef->_TS || te > ef->_TE) continue;//±ß½çÇé¿ö£¬µÚÒ»¸ö»ò×îºóÒ»¸ö²»´æÔÚ
-			int prev_node_id = tti_to_node[{ts, te}];//¶¨ÀíÕıÈ·Ôò[ts,te]±ØÎªÒ»¸ötti
-			ef->lineage_graph[node_id].pre_nd.push_back(prev_node_id);//½¨±ßnode_id->prev_node_id
-			ef->lineage_graph[prev_node_id].nxt_nd.push_back(node_id);//½¨±ßprev_node_id->node_id
+			if (ts < ef->_TS || te > ef->_TE) continue;
+			int prev_node_id = tti_to_node[{ts, te}];
+			ef->lineage_graph[node_id].pre_nd.push_back(prev_node_id);
+			ef->lineage_graph[prev_node_id].nxt_nd.push_back(node_id);
 		}
 	}
-	ef->entry_node_id = tti_to_node[first_tti];//ÉèÖÃlineage graphµÄÈë¿Ú½Úµã£¬first_ttiÔÚZPar_OÖĞ¼ÇÂ¼
+	ef->entry_node_id = tti_to_node[first_tti];
 }
 
 void evo_construct(EF_Index* ef)
 {
-	int entry_node = ef->entry_node_id;//»ñÈ¡lineage graphÈë¿Ú½Úµãid
-	int number_of_lineage_node = ef->number_of_lineage_node;//»ñÈ¡lineage graphµÄnodeÊıÁ¿
-	vector<int> set_of_end_node;//ÓÃÓÚÊÕ¼¯lineage graphÖĞËùÓĞ³ö¶ÈÎªÁãµÄ½Úµã£¨¼«Ğ¡TTI½Úµã£©
-	for (int i = 0; i < number_of_lineage_node; ++i)//±éÀúlineage graphµÄËùÓĞ½Úµã½øĞĞÊÕ¼¯
+	int entry_node = ef->entry_node_id;
+	int number_of_lineage_node = ef->number_of_lineage_node;
+	vector<int> set_of_end_node;
+	for (int i = 0; i < number_of_lineage_node; ++i)
 	{
 		if (ef->lineage_graph[i].nxt_nd.size() == 0)
 		{
-			set_of_end_node.push_back(i);//Èç¹û³ö¶ÈÎª0£¬ÊÕ¼¯Õâ¸ö½ÚµãµÄid
+			set_of_end_node.push_back(i);
 		}
 	}
-	ef->length_of_evo_array = set_of_end_node.size();//ÉèÖÃevo_arrayµÄ³¤¶È¼´Îª³ö¶ÈÎªÁãµÄlineage nodeÊıÁ¿
-	ef->evo_array = new A_NODE[ef->length_of_evo_array];//³õÊ¼»¯evo_array
-	for (int i = 0; i < ef->length_of_evo_array; ++i)//ÉèÖÃÃ¿¸öevo_arrayÖĞÔªËØµÄÕæÊµÖµ£¬°üÀ¨TTIºÍlineage nodeµÄid
+	ef->length_of_evo_array = set_of_end_node.size();
+	ef->evo_array = new A_NODE[ef->length_of_evo_array];
+	for (int i = 0; i < ef->length_of_evo_array; ++i)
 	{
-		int end_node_id = set_of_end_node[i];//»ñÈ¡lineage nodeµÄid
-		ef->evo_array[i].ts = ef->lineage_graph[end_node_id].ts;//ÉèÖÃTTIÆğÊ¼Ê±¿Ì
-		ef->evo_array[i].te = ef->lineage_graph[end_node_id].te;//ÉèÖÃTTIÖÕÖ¹Ê±¿Ì
-		ef->evo_array[i].lineage_node = end_node_id;//ÉèÖÃlineage node µÄ id
+		int end_node_id = set_of_end_node[i];
+		ef->evo_array[i].ts = ef->lineage_graph[end_node_id].ts;
+		ef->evo_array[i].te = ef->lineage_graph[end_node_id].te;
+		ef->evo_array[i].lineage_node = end_node_id;
 	}
-	sort(ef->evo_array, ef->evo_array + ef->length_of_evo_array);//½«evo_array°´ÕÕÆğÊ¼Ê±¿ÌÉıĞòÅÅĞò
-	//ÓÉÓÚevo_array¶ÔÓ¦µÄ¶¼ÊÇ¼«Ğ¡TTI£¬Òò´ËÆğÊ¼ÖÕÖ¹Ê±¿Ì¶¼¸÷²»ÏàÍ¬£¬ÇÒÖÕÖ¹Ê±¿ÌËæÆğÊ¼Ê±¿Ìµ¥Ôö
+	sort(ef->evo_array, ef->evo_array + ef->length_of_evo_array);
+	
 }
 
 void compute_layer_number(EF_Index* ef)
 {
-	int* in_queue = new int[ef->number_of_lineage_node];//¹¹½¨Ò»¸öÊı×é£¬¼ÇÂ¼Ã¿¸ölineage nodeÊÇ·ñÈë¹ı¶Ó£¨ÒÑ±»¼ÆËã£©
-	memset(in_queue, 0, 4 * (ef->number_of_lineage_node));//½«Êı×é³õÊ¼»¯ÎªÈ«0
-	queue<int> q;//¹¹½¨BFS¶ÓÁĞ
-	ef->lineage_graph[ef->entry_node_id].layer_number = 0;//³õÊ¼»¯entry nodeµÄ²ãÊıÎªµÚ0²ã
-	q.push(ef->entry_node_id);//½«entry nodeÈë¶Ó
-	in_queue[ef->entry_node_id] = 1;//ÉèÖÃentry nodeÎªÒÑ¾­Èë¹ı¶Ó
+	int* in_queue = new int[ef->number_of_lineage_node];
+	memset(in_queue, 0, 4 * (ef->number_of_lineage_node));
+	queue<int> q;
+	ef->lineage_graph[ef->entry_node_id].layer_number = 0;
+	q.push(ef->entry_node_id);
+	in_queue[ef->entry_node_id] = 1;
 	while (q.size())//BFS
 	{
 		int node_id = q.front();
@@ -1469,62 +1468,62 @@ void compute_layer_number(EF_Index* ef)
 
 			if (!in_queue[nxt_node_id])
 			{
-				//ÉèÖÃlayer numberÎªµ±Ç°nodeµÄlayer number + 1
+				
 				ef->lineage_graph[nxt_node_id].layer_number = ef->lineage_graph[node_id].layer_number + 1;
-				//Èë¶Ó
+				
 				q.push(nxt_node_id);
-				//±ê¼ÇÎªÒÑ´¦Àí
+				
 				in_queue[nxt_node_id] = 1;
 			}
 	}
-	delete[] in_queue;//ÊÍ·ÅÄÚ´æ
+	delete[] in_queue;
 }
 
 void chain_partition(EF_Index* ef, vector<vector<int>>& chain_set)
 {
 	compute_layer_number(ef);
 	set<pair<int, int>> heap_of_node_by_layer_number;//<layer number, node id>
-	//ÓÃsetÄ£ÄâĞ¡¶¥¶Ñ£¬½«lineage node´æ´¢£¬ÓÃÓÚÖ®ºóµÄgreedy chain generation
+	
 	for (int i = 0; i < ef->number_of_lineage_node; ++i)
 	{
 		heap_of_node_by_layer_number.insert({ef->lineage_graph[i].layer_number, i});
 	}
 	while (heap_of_node_by_layer_number.size())
 	{
-		vector<int> chain;//Éú³ÉÒ»ÌõĞÂµÄchain
-		pair<int, int> top_item_in_heap = *heap_of_node_by_layer_number.begin();//µ¯³ö¶Ñ¶¥×÷ÎªchainµÄµÚÒ»¸önode
-		int first_chain_node = top_item_in_heap.second;//»ñÈ¡nodeµÄid
-		chain.push_back(first_chain_node);//½«µÚÒ»¸önode¼ÓÈëchainÀï
-		heap_of_node_by_layer_number.erase(heap_of_node_by_layer_number.begin());//ÒÆ³ı¶Ñ¶¥
-		int last_chain_node = first_chain_node;//last_chain_node´æ´¢µ±Ç°chainµÄ×îºóÒ»¸önodeµÄid£¬³õÊ¼»¯Îªfirst_chain_node
-		while (ef->lineage_graph[last_chain_node].nxt_nd.size())//²ÉÓÃgreedy approachÉú³ÉÕûÌõchain
+		vector<int> chain;//ç”Ÿæˆä¸€æ¡æ–°çš„chain
+		pair<int, int> top_item_in_heap = *heap_of_node_by_layer_number.begin();
+		int first_chain_node = top_item_in_heap.second;
+		chain.push_back(first_chain_node);
+		heap_of_node_by_layer_number.erase(heap_of_node_by_layer_number.begin());
+		int last_chain_node = first_chain_node;
+		while (ef->lineage_graph[last_chain_node].nxt_nd.size())
 		{
-			//ÏÂÃæ±éÀúËùÓĞÓëlast_chain_nodeÏàÁÚµÄnode£¬ÕÒµ½weight×îĞ¡µÄÄÇÒ»¸ö
-			int nxt_chain_node = -1;//¼ÇÂ¼node id
-			int weight_of_nxt_chain_node = -1;//¼ÇÂ¼weightÖµ
+			
+			int nxt_chain_node = -1;
+			int weight_of_nxt_chain_node = -1;
 			for (auto nxt_node : ef->lineage_graph[last_chain_node].nxt_nd)
 			{
 				if (
-					heap_of_node_by_layer_number.count({ ef->lineage_graph[nxt_node].layer_number, nxt_node })//nxt_nodeÈÔÔÚ¶ÓÀï£¬ÉĞÎ´±»¸²¸Ç
+					heap_of_node_by_layer_number.count({ ef->lineage_graph[nxt_node].layer_number, nxt_node })
 					 &&
-					ef->lineage_graph[nxt_node].weight > weight_of_nxt_chain_node//nxt_nodeµÄweight¸ü´ó
+					ef->lineage_graph[nxt_node].weight > weight_of_nxt_chain_node
 				   )
 				{
 					nxt_chain_node = nxt_node;
 					weight_of_nxt_chain_node = ef->lineage_graph[nxt_node].weight;
 				}
 			}
-			if (nxt_chain_node == -1) break;//Èç¹ûÃ»ÓĞÕÒµ½£¬ËµÃ÷ÒÑ¾­Ã»ÓĞºó¼Ìnode£¬»òºó¼Ìnode¾ùÒÑÊôÓÚÄ³Ò»chain
-											//µ±Ç°chainÉú³ÉÍê±Ï
-			chain.push_back(nxt_chain_node);//µ±Ç°chainÑÓÉêÒ»¸ö½Úµã
+			if (nxt_chain_node == -1) break;
+											
+			chain.push_back(nxt_chain_node);
 			heap_of_node_by_layer_number.erase({ ef->lineage_graph[nxt_chain_node].layer_number, nxt_chain_node });
-											//ÑÓÉêµÄ½Úµã´Ó¶ÑÖĞÒÆ³ı
-			last_chain_node = nxt_chain_node;//¸üĞÂÁ´Ä©Î²½ÚµãÎªĞÂÑÓÉêµÄ½Úµã£¬¼ÌĞøÑÓÉê
+											
+			last_chain_node = nxt_chain_node;
 		}
-		chain_set.push_back(chain);//ÊÕ¼¯ĞÂÉú³ÉµÄchain
+		chain_set.push_back(chain);
 	}
 
-	//ËùÓĞchainÉú³Éºó£¬ÉèÖÃÃ¿¸ölineage nodeµÄchain±àºÅ,¼´elf_id
+	
 	for (int chain_id = 0; chain_id < chain_set.size(); ++chain_id)
 	{
 		for (int node_id : chain_set[chain_id])
@@ -1533,7 +1532,7 @@ void chain_partition(EF_Index* ef, vector<vector<int>>& chain_set)
 		}
 	}
 
-	ef->chain_set = chain_set;//Ä¿Ç°ÕæÊµ³¡¾°ÏÂEF_Index²»±Ø±£´æÃ¿ÌõchainÊÇÊ²Ã´£¬ÏÖÔÚ±£´æÖ»ÊÇÎªÁË¿ÉÊÓ»¯
+	ef->chain_set = chain_set;
 }
 
 void init_tkc_structure(int ts, int te, int k)
@@ -1630,19 +1629,19 @@ void tcd_edge_collect(int ts, int te, int k, vector<int>& dec_edge)
 
 void compute_inc_edge(EF_Index* ef, vector<int>& chain, vector<vector<int>>& inc_edge)
 {
-	//´ËÊ±tkcµÄstructure£¨Mv,Hv,Mc,TEL£©Ó¦¸ÃÒÑ¾­¶ÔÓ¦chainÖĞµÚÒ»¸ödistinct core
+	
 	for (int i = 0; i < chain.size() - 1; ++i)
 	{
 		int ts_of_target_tti = ef->lineage_graph[chain[i + 1]].ts;
 		int te_of_target_tti = ef->lineage_graph[chain[i + 1]].te;
-		vector<int> tcd_dec_edge;//ÊÕ¼¯tcd¹ı³ÌÖĞ¼õÉÙµÄÊ±Ğò±ß
+		vector<int> tcd_dec_edge;
 		tcd_edge_collect(ts_of_target_tti, te_of_target_tti, ef->_K, tcd_dec_edge);
-		inc_edge.push_back(tcd_dec_edge);//chainÖĞµÚi¸ödistinct coreµ½µÚi + 1¸ødistinct core¼õÉÙµÄÊ±Ğò±ß
+		inc_edge.push_back(tcd_dec_edge);
 	}
-	inc_edge.push_back({});//¼ÓÈë×îºóÒ»¸ö±ß¼¯(³õÊ¼Îª¿Õ),ÓÃÓÚ±£´æchainÖĞ×îºóÒ»¸ödistinct coreµÄÊ±Ğò±ß
-	//chainÖĞ×îºóÒ»¸ödistinct coreµÄËùÓĞÊ±Ğò±ß¼´ÎªÆäÔöÁ¿±ß£¬È«²¿±£´æ
-	int x = chain.size() - 1;//×îºóÒ»¸ödistinct coreËùÔÚµÄÏÂ±ê
-	for (int p = head; p != -1; p = tsnxt[p])//ÊÕ¼¯TELÀïÊ£ÏÂµÄËùÓĞÊ±Ğò±ß£¬ÏÈ±éÀúTL£¬ÔÙ±éÀúÃ¿¸öTL[t]Á´ÉÏµÄÊ±Ğò±ß
+	inc_edge.push_back({});
+	
+	int x = chain.size() - 1;
+	for (int p = head; p != -1; p = tsnxt[p])
 	{
 		int t = tsarc[p];
 		for (int i = ht[t]; ~i; i = tnxt[i])
@@ -1657,7 +1656,7 @@ void compute_inc_edge(EF_Index* ef, vector<int>& chain, vector<vector<int>>& inc
 void construct_forest(EF_Index* ef, ELF& elf, vector<int>& chain, vector<vector<int>>& inc_edge)
 {
 	int n = chain.size() - 1;
-	for (int i = 0; i < elf.v_num; ++i) p[i] = i;//³õÊ¼»¯²¢²é¼¯£¬ÓÃÓÚforest¹¹½¨(ELF forestµã±àºÅ:0-(v_num-1))
+	for (int i = 0; i < elf.v_num; ++i) p[i] = i;
 	for (int i = n; i >= 0; --i)
 	{
 		for (int eid : inc_edge[i])
@@ -1666,10 +1665,10 @@ void construct_forest(EF_Index* ef, ELF& elf, vector<int>& chain, vector<vector<
 			int raw_dst = arcs[eid].dst;
 			int elf_src = elf.elf_vertex_id(raw_src);
 			int elf_dst = elf.elf_vertex_id(raw_dst);
-			if (find(elf_src) != find(elf_dst))//Èç¹ûÁ½¸öµãÔÚELF forestÖĞ»¹²»Á¬Í¨£¬ÔòÔÚforestÖĞÌí¼ÓÕâÌõ±ß
+			if (find(elf_src) != find(elf_dst))
 			{
 				elf.insert_edge(elf_src, elf_dst, ef->lineage_graph[chain[i]].ts, ef->lineage_graph[chain[i]].te);
-				combine(elf_src, elf_dst);//Î¬»¤²¢²é¼¯£¬Á½¸ö¶ËµãÁ¬Í¨
+				combine(elf_src, elf_dst);
 			}
 		}
 	}
@@ -1682,12 +1681,12 @@ void create_elf_of_chain(EF_Index* ef, int elf_id, vector<int>& chain)
 	init_tkc_structure(ef->lineage_graph[chain[0]].ts, ef->lineage_graph[chain[0]].te, ef->_K);
 
 	size_t number_of_vertex = Mv.size();
-	elf.v_num = number_of_vertex;//ÉèÖÃelfµÄ½ÚµãÊı£¬¼´ÎªchainÖĞµÚÒ»¸önode¶ÔÓ¦tkcµÄ½ÚµãÊı
-	for (auto vn : Mv) elf.v_raw.push_back(vn.first);//ÉèÖÃelfµÄ½Úµã¼¯£¨½Úµã±àºÅÎªÔ­Ê±ĞòÍ¼ÖĞµÄ±àºÅ£¬¿ÉÄÜ²»Á¬Ğø£©
-	sort(elf.v_raw.begin(), elf.v_raw.end());//elf½Úµã¼¯ÉıĞòÅÅĞò£¬ÓÃÓÚÓ³Éäµ½elfµÄforestÄÚµÄ½Úµã±àºÅ£¨Á¬Ğø£©
-	elf.init_mem(number_of_vertex);//³õÊ¼»¯elf foresetµÄÁÚ½Ó±íÄÚ´æ
-	vector<vector<int>> inc_edge;//chainÉÏÏàÁÚÁ½¸ödistinct coreÖ®¼äµÄÔöÁ¿±ß¼¯,ÓÃÓÚÖ®ºó¹¹½¨forest
-	compute_inc_edge(ef, chain, inc_edge);//»ñÈ¡chainÏàÁÚdistinct coreµÄÔöÁ¿±ß
+	elf.v_num = number_of_vertex;
+	for (auto vn : Mv) elf.v_raw.push_back(vn.first);
+	sort(elf.v_raw.begin(), elf.v_raw.end());
+	elf.init_mem(number_of_vertex);
+	vector<vector<int>> inc_edge;
+	compute_inc_edge(ef, chain, inc_edge);
 
 	construct_forest(ef, elf, chain, inc_edge);
 }
@@ -1715,9 +1714,9 @@ void free_elf(EF_Index* ef, int id)
 void chain_partition_opt(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pair<int, int>, int, pair_hash>& TTI2ID);
 void elf_construct(EF_Index* ef)
 {
-	//ÔÚelf_constructÀïÕâTTI2IDÖ»ÊÇÎªÁË¼æÈİchain_partition_opt¶ø´´½¨,ºóÃæµ÷ÓÃµÄÊÇcreate_elf¶ø·Çcreate_elf_o,Òò´ËÃ»ÓĞÊµ¼Ê×÷ÓÃ
-	static unordered_map<pair<int, int>, int, pair_hash> TTI2ID;//ËùÓĞÁ´Á´Ê×distinct coreµÄTTIµ½Á´±àºÅµÄÓ³Éä£¬»áÔÚchain_partition_oÖĞ¼ÆËã
-	TTI2ID.clear();//Ã¿´Î¹¹½¨ĞÂµÄELFÖ®Ç°ÏÈÇå¿ÕÁ´Ê×µ½Á´IDµÄÓ³Éä¼¯
+	
+	static unordered_map<pair<int, int>, int, pair_hash> TTI2ID;
+	TTI2ID.clear();
 	
 	vector<vector<int>> chain_set;
 	chain_partition_opt(ef, chain_set, TTI2ID);
@@ -1726,14 +1725,14 @@ void elf_construct(EF_Index* ef)
 
 EF_Index* ef_construct(int Ts, int Te, int K)
 {
-	EF_Index* ef = new EF_Index(Ts, Te, K);//³õÊ¼»¯EF_Index,Îª·µ»ØµÄ¶ÔÏó
+	EF_Index* ef = new EF_Index(Ts, Te, K);
 	lg_construct(ef);
 	evo_construct(ef);
 	elf_construct(ef);
 	return ef;
 }
 
-int recover_ts(int t)//½«Á¬ĞøµÄÊ±¼ä´Á¸´Ô­ÎªÔ­Í¼ÖĞÀëÉ¢µÄÊ±¼ä´Á,t±ØĞëÔÚÁ¬Ğø»¯ºóµÄÊ±¼ä´Á·¶Î§ÄÚ
+int recover_ts(int t)
 {
 	if (t > consecutive_timestamp.size() || t < 1)
 	{
@@ -1744,7 +1743,7 @@ int recover_ts(int t)//½«Á¬ĞøµÄÊ±¼ä´Á¸´Ô­ÎªÔ­Í¼ÖĞÀëÉ¢µÄÊ±¼ä´Á,t±ØĞëÔÚÁ¬Ğø»¯ºóµÄÊ
 	return t;
 }
 
-void ef_dump_chain_set(EF_Index* ef)//´òÓ¡EF_IndexµÄËùÓĞchain,TTIÎªÔ­Í¼Ê±¼ä,²¢¼ÆËã¿ªÏú
+void ef_dump_chain_set(EF_Index* ef)
 {
 	printf("The EF_Index contains the following chains:\n");
 	long long total_cost = 0ll;
@@ -1765,7 +1764,7 @@ void ef_dump_chain_set(EF_Index* ef)//´òÓ¡EF_IndexµÄËùÓĞchain,TTIÎªÔ­Í¼Ê±¼ä,²¢¼Æ
 	printf("The total cost of ELF Forests is %lld\n", total_cost);
 }
 
-void ef_calc_tot_heap(EF_Index* ef)//¼ÆËãEF_Index·ÖÅäµÄ×Ü¶ÑÄÚ´æ
+void ef_calc_tot_heap(EF_Index* ef)
 {
 	unsigned long long tot_mem_of_ef_index = 0ull;
 	tot_mem_of_ef_index += (80ull * (unsigned long long)ef->number_of_elf);
@@ -1780,9 +1779,9 @@ void ef_calc_tot_heap(EF_Index* ef)//¼ÆËãEF_Index·ÖÅäµÄ×Ü¶ÑÄÚ´æ
 	printf("Total heap memory consumed by EF-Index: %llu\n", tot_mem_of_ef_index);
 }
 
-void ef_calc_lg_width(EF_Index* ef)//¼ÆËãEF_IndexµÄlineage graph×î¿í²ã°üº¬µÄ½ÚµãÊı
+void ef_calc_lg_width(EF_Index* ef)
 {
-	unordered_map<int, int> num_of_nd_per_layer;//Í³¼Ælineage graphÃ¿²ã½ÚµãÊı
+	unordered_map<int, int> num_of_nd_per_layer;
 	for (int i = 0; i < ef->number_of_lineage_node; ++i)
 	{
 		int layer = ef->lineage_graph[i].layer_number;
@@ -1797,16 +1796,16 @@ void ef_calc_lg_width(EF_Index* ef)//¼ÆËãEF_IndexµÄlineage graph×î¿í²ã°üº¬µÄ½Úµã
 	printf("The widest layer in lineage graph contains %d node.\n", max_layer);
 }
 
-void ef_dump(EF_Index* ef)//´òÓ¡Ò»¸öEF_IndexµÄÏà¹ØĞÅÏ¢
+void ef_dump(EF_Index* ef)
 {
 	printf("Properties of EF_Index under ([%d,%d],%d)\n", recover_ts(ef->_TS), recover_ts(ef->_TE), ef->_K);
 	printf("The number of lineage node is %d\n", ef->number_of_lineage_node);
 	printf("The number of ELF instances is %d\n", ef->number_of_elf);
 	printf("The number of elements in evo-array is %d\n", ef->length_of_evo_array);
 
-	int tot_lg_edge = 0;//Í³¼Ælineage relationµÄ×ÜÊı£¬¼´Îªlineage graphµÄ×Ü±ßÊı
+	int tot_lg_edge = 0;
 
-	for (int i = 0; i < ef->number_of_lineage_node; ++i)//±éÀúlineage graphµÄËùÓĞ½Úµã£¬ÀÛ¼Ó¸÷¸ö½ÚµãµÄ³ö±ßÊıÄ¿
+	for (int i = 0; i < ef->number_of_lineage_node; ++i)
 	{
 		tot_lg_edge += ef->lineage_graph[i].nxt_nd.size();
 	}
@@ -1824,12 +1823,12 @@ void ef_dump(EF_Index* ef)//´òÓ¡Ò»¸öEF_IndexµÄÏà¹ØĞÅÏ¢
 
 void optimal_tccs(EF_Index* ef, int query_span_ts, int query_span_te, int query_k, int query_vertex, vector<int>& res)
 {
-	if (ef->_K != query_k)//²éÑ¯µÄkºÍEF_Index²»Æ¥Åä
+	if (ef->_K != query_k)
 	{
 		printf("The K value of the EF_Index does not match the query k\n");
 		return;
 	}
-	if (ef->_TS > query_span_ts || ef->_TE < query_span_te)//²éÑ¯µÄÇø¼ä²»ÔÚEF_Index¹¹ÔìµÄÇø¼äÄÚ
+	if (ef->_TS > query_span_ts || ef->_TE < query_span_te)
 	{
 		printf("The Span of the EF_Index does not include the query span\n");
 		return;
@@ -1849,8 +1848,8 @@ void read_dblp_author_name(const char* dblp_author_file)
 		string aut_id = l.substr(0, i);
 		string aut_name_raw = l.substr(i + 1ll);
 		int name_length = aut_name_raw.size() - 2;
-		string aut_name = aut_name_raw.substr(1, name_length);//È¥³ıÈËÃûÇ°ºóµÄË«ÒıºÅ
-		for (int i = 0; i < aut_name.size(); ++i)//½«ËùÓĞÈËÃûÖĞµÄÏÂ»®ÏßÌæ»»Îª¿Õ¸ñ
+		string aut_name = aut_name_raw.substr(1, name_length);
+		for (int i = 0; i < aut_name.size(); ++i)
 			if (aut_name[i] == '_')
 			{
 				aut_name[i] = ' ';
@@ -1860,12 +1859,12 @@ void read_dblp_author_name(const char* dblp_author_file)
 }
 
 
-int map_start_time(int ts)//½«²éÑ¯Çø¼äÆğÊ¼Ê±¿ÌÓ³ÉäÎªÁ¬Ğø»¯ºóµÄÖµ
+int map_start_time(int ts)
 {
 	return (lower_bound(consecutive_timestamp.begin(), consecutive_timestamp.end(), ts) - consecutive_timestamp.begin()) + 1;
 }
 
-int map_end_time(int te)//½«²éÑ¯Çø¼äÖÕÖ¹Ê±¿ÌÓ³ÉäÎªÁ¬Ğø»¯ºóµÄÖµ
+int map_end_time(int te)
 {
 	return (upper_bound(consecutive_timestamp.begin(), consecutive_timestamp.end(), te) - consecutive_timestamp.begin());
 }
@@ -1946,13 +1945,13 @@ void __rst()
 }
 
 struct L_HEAP_ITEM {
-	int weight;//lineage nodeµÄÈ¨Öµ(ds½ÚµãÊı),Îª¶ÑµÄcandidate key
-	int layer;//lineage nodeµÄ²ãÊı(ÔÚlineage graphÖĞµÄ²ãÊı),Îª¶ÑµÄcandidate key
-	int nid; //lineage node µÄidºÅ,Îª¶ÑµÄvalue
+	int weight;
+	int layer;
+	int nid; 
 	bool operator<(const L_HEAP_ITEM& another) const
 	{
-		if (layer != another.layer) return layer < another.layer; //²ãÊı²»Í¬£¬²ãÊı´óµÄ·ÅÇ°Ãæ
-		return weight > another.weight;//²ãÊıÏàÍ¬£¬È¨Öµ´óµÄ·ÅÇ°Ãæ
+		if (layer != another.layer) return layer < another.layer; 
+		return weight > another.weight;
 	}
 };
 
@@ -1960,50 +1959,50 @@ void wchain_partition_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_
 {
 	compute_layer_number(ef);
 	set<L_HEAP_ITEM> heap_of_node_by_layer_number;//<key, node id>
-	//ÓÃsetÄ£ÄâĞ¡¶¥¶Ñ£¬½«lineage node´æ´¢£¬ÓÃÓÚÖ®ºóµÄgreedy chain generation
+	
 	for (int i = 0; i < ef->number_of_lineage_node; ++i)
 	{
 		heap_of_node_by_layer_number.insert({ ef->lineage_graph[i].weight, ef->lineage_graph[i].layer_number, i });
 	}
 	while (heap_of_node_by_layer_number.size())
 	{
-		vector<int> chain;//Éú³ÉÒ»ÌõĞÂµÄchain
-		L_HEAP_ITEM top_item_in_heap = *heap_of_node_by_layer_number.begin();//µ¯³ö¶Ñ¶¥×÷ÎªchainµÄµÚÒ»¸önode
-		int first_chain_node = top_item_in_heap.nid;//»ñÈ¡nodeµÄid
-		chain.push_back(first_chain_node);//½«µÚÒ»¸önode¼ÓÈëchainÀï
-		heap_of_node_by_layer_number.erase(heap_of_node_by_layer_number.begin());//ÒÆ³ı¶Ñ¶¥
-		int last_chain_node = first_chain_node;//last_chain_node´æ´¢µ±Ç°chainµÄ×îºóÒ»¸önodeµÄid£¬³õÊ¼»¯Îªfirst_chain_node
-		while (ef->lineage_graph[last_chain_node].nxt_nd.size())//²ÉÓÃgreedy approachÉú³ÉÕûÌõchain
+		vector<int> chain;
+		L_HEAP_ITEM top_item_in_heap = *heap_of_node_by_layer_number.begin();
+		int first_chain_node = top_item_in_heap.nid;
+		chain.push_back(first_chain_node);
+		heap_of_node_by_layer_number.erase(heap_of_node_by_layer_number.begin());
+		int last_chain_node = first_chain_node;
+		while (ef->lineage_graph[last_chain_node].nxt_nd.size())
 		{
-			//ÏÂÃæ±éÀúËùÓĞÓëlast_chain_nodeÏàÁÚµÄnode£¬ÕÒµ½weight×îĞ¡µÄÄÇÒ»¸ö
-			int nxt_chain_node = -1;//¼ÇÂ¼node id
-			int weight_of_nxt_chain_node = -1;//¼ÇÂ¼weightÖµ
+			
+			int nxt_chain_node = -1;//è®°å½•node id
+			int weight_of_nxt_chain_node = -1;//è®°å½•weightå€¼
 			for (auto nxt_node : ef->lineage_graph[last_chain_node].nxt_nd)
 			{
 				if (
-					heap_of_node_by_layer_number.count({ ef->lineage_graph[nxt_node].weight, ef->lineage_graph[nxt_node].layer_number, nxt_node })//nxt_nodeÈÔÔÚ¶ÓÀï£¬ÉĞÎ´±»¸²¸Ç
+					heap_of_node_by_layer_number.count({ ef->lineage_graph[nxt_node].weight, ef->lineage_graph[nxt_node].layer_number, nxt_node })
 					&&
-					ef->lineage_graph[nxt_node].weight > weight_of_nxt_chain_node//nxt_nodeµÄweight¸ü´ó
+					ef->lineage_graph[nxt_node].weight > weight_of_nxt_chain_node
 					)
 				{
 					nxt_chain_node = nxt_node;
 					weight_of_nxt_chain_node = ef->lineage_graph[nxt_node].weight;
 				}
 			}
-			if (nxt_chain_node == -1) break;//Èç¹ûÃ»ÓĞÕÒµ½£¬ËµÃ÷ÒÑ¾­Ã»ÓĞºó¼Ìnode£¬»òºó¼Ìnode¾ùÒÑÊôÓÚÄ³Ò»chain
-											//µ±Ç°chainÉú³ÉÍê±Ï
-			chain.push_back(nxt_chain_node);//µ±Ç°chainÑÓÉêÒ»¸ö½Úµã
+			if (nxt_chain_node == -1) break;
+											
+			chain.push_back(nxt_chain_node);
 			heap_of_node_by_layer_number.erase({ ef->lineage_graph[nxt_chain_node].weight, ef->lineage_graph[nxt_chain_node].layer_number, nxt_chain_node });
-			//ÑÓÉêµÄ½Úµã´Ó¶ÑÖĞÒÆ³ı
-			last_chain_node = nxt_chain_node;//¸üĞÂÁ´Ä©Î²½ÚµãÎªĞÂÑÓÉêµÄ½Úµã£¬¼ÌĞøÑÓÉê
+			//å»¶ç”³çš„èŠ‚ç‚¹ä»å †ä¸­ç§»é™¤
+			last_chain_node = nxt_chain_node;
 		}
-		pair<int, int> TTI = { ef->lineage_graph[chain[0]].ts, ef->lineage_graph[chain[0]].te };//»ñÈ¡ÕâÌõĞÂÁ´Á´Ê×distinct coreµÄTTI
-		int ID = chain_set.size();//»ñÈ¡ÕâÌõĞÂÁ´µÄID£¬¼´ËüÔÚchain_setÖĞµÄÏÂ±ê£¬¼´Îª´ËÊ±chain_setµÄsize
-		TTI2ID[TTI] = ID;//±£´æÕâÌõĞÂÁ´Á´Ê×distinct core TTIµ½Á´IDµÄÓ³Éä
-		chain_set.push_back(chain);//ÊÕ¼¯ĞÂÉú³ÉµÄchain
+		pair<int, int> TTI = { ef->lineage_graph[chain[0]].ts, ef->lineage_graph[chain[0]].te };
+		int ID = chain_set.size();
+		TTI2ID[TTI] = ID;
+		chain_set.push_back(chain);
 	}
 
-	//ËùÓĞchainÉú³Éºó£¬ÉèÖÃÃ¿¸ölineage nodeµÄchain±àºÅ,¼´elf_id
+	
 	for (int chain_id = 0; chain_id < chain_set.size(); ++chain_id)
 	{
 		for (int node_id : chain_set[chain_id])
@@ -2012,57 +2011,56 @@ void wchain_partition_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_
 		}
 	}
 
-	ef->chain_set = chain_set;//Ä¿Ç°ÕæÊµ³¡¾°ÏÂEF_Index²»±Ø±£´æÃ¿ÌõchainÊÇÊ²Ã´£¬ÏÖÔÚ±£´æÖ»ÊÇÎªÁË¿ÉÊÓ»¯
+	ef->chain_set = chain_set;
 }
 
 void chain_partition_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pair<int, int>, int, pair_hash>& TTI2ID)
 {
 	compute_layer_number(ef);
 	set<pair<int, int>> heap_of_node_by_layer_number;//<layer number, node id>
-	//ÓÃsetÄ£ÄâĞ¡¶¥¶Ñ£¬½«lineage node´æ´¢£¬ÓÃÓÚÖ®ºóµÄgreedy chain generation
+	
 	for (int i = 0; i < ef->number_of_lineage_node; ++i)
 	{
 		heap_of_node_by_layer_number.insert({ ef->lineage_graph[i].layer_number, i });
 	}
 	while (heap_of_node_by_layer_number.size())
 	{
-		vector<int> chain;//Éú³ÉÒ»ÌõĞÂµÄchain
-		pair<int, int> top_item_in_heap = *heap_of_node_by_layer_number.begin();//µ¯³ö¶Ñ¶¥×÷ÎªchainµÄµÚÒ»¸önode
-		int first_chain_node = top_item_in_heap.second;//»ñÈ¡nodeµÄid
-		chain.push_back(first_chain_node);//½«µÚÒ»¸önode¼ÓÈëchainÀï
-		heap_of_node_by_layer_number.erase(heap_of_node_by_layer_number.begin());//ÒÆ³ı¶Ñ¶¥
-		int last_chain_node = first_chain_node;//last_chain_node´æ´¢µ±Ç°chainµÄ×îºóÒ»¸önodeµÄid£¬³õÊ¼»¯Îªfirst_chain_node
-		while (ef->lineage_graph[last_chain_node].nxt_nd.size())//²ÉÓÃgreedy approachÉú³ÉÕûÌõchain
+		vector<int> chain;
+		pair<int, int> top_item_in_heap = *heap_of_node_by_layer_number.begin();
+		int first_chain_node = top_item_in_heap.second;
+		chain.push_back(first_chain_node);
+		heap_of_node_by_layer_number.erase(heap_of_node_by_layer_number.begin());
+		int last_chain_node = first_chain_node;
+		while (ef->lineage_graph[last_chain_node].nxt_nd.size())
 		{
-			//ÏÂÃæ±éÀúËùÓĞÓëlast_chain_nodeÏàÁÚµÄnode£¬ÕÒµ½weight×îĞ¡µÄÄÇÒ»¸ö
-			int nxt_chain_node = -1;//¼ÇÂ¼node id
-			int weight_of_nxt_chain_node = -1;//¼ÇÂ¼weightÖµ
+			
+			int nxt_chain_node = -1;
+			int weight_of_nxt_chain_node = -1;
 			for (auto nxt_node : ef->lineage_graph[last_chain_node].nxt_nd)
 			{
 				if (
-					heap_of_node_by_layer_number.count({ ef->lineage_graph[nxt_node].layer_number, nxt_node })//nxt_nodeÈÔÔÚ¶ÓÀï£¬ÉĞÎ´±»¸²¸Ç
+					heap_of_node_by_layer_number.count({ ef->lineage_graph[nxt_node].layer_number, nxt_node })
 					&&
-					ef->lineage_graph[nxt_node].weight > weight_of_nxt_chain_node//nxt_nodeµÄweight¸ü´ó
+					ef->lineage_graph[nxt_node].weight > weight_of_nxt_chain_node
 					)
 				{
 					nxt_chain_node = nxt_node;
 					weight_of_nxt_chain_node = ef->lineage_graph[nxt_node].weight;
 				}
 			}
-			if (nxt_chain_node == -1) break;//Èç¹ûÃ»ÓĞÕÒµ½£¬ËµÃ÷ÒÑ¾­Ã»ÓĞºó¼Ìnode£¬»òºó¼Ìnode¾ùÒÑÊôÓÚÄ³Ò»chain
-											//µ±Ç°chainÉú³ÉÍê±Ï
-			chain.push_back(nxt_chain_node);//µ±Ç°chainÑÓÉêÒ»¸ö½Úµã
+			if (nxt_chain_node == -1) break;
+			chain.push_back(nxt_chain_node);
 			heap_of_node_by_layer_number.erase({ ef->lineage_graph[nxt_chain_node].layer_number, nxt_chain_node });
-			//ÑÓÉêµÄ½Úµã´Ó¶ÑÖĞÒÆ³ı
-			last_chain_node = nxt_chain_node;//¸üĞÂÁ´Ä©Î²½ÚµãÎªĞÂÑÓÉêµÄ½Úµã£¬¼ÌĞøÑÓÉê
+			//å»¶ç”³çš„èŠ‚ç‚¹ä»å †ä¸­ç§»é™¤
+			last_chain_node = nxt_chain_node;
 		}
-		pair<int, int> TTI = { ef->lineage_graph[chain[0]].ts, ef->lineage_graph[chain[0]].te };//»ñÈ¡ÕâÌõĞÂÁ´Á´Ê×distinct coreµÄTTI
-		int ID = chain_set.size();//»ñÈ¡ÕâÌõĞÂÁ´µÄID£¬¼´ËüÔÚchain_setÖĞµÄÏÂ±ê£¬¼´Îª´ËÊ±chain_setµÄsize
-		TTI2ID[TTI] = ID;//±£´æÕâÌõĞÂÁªÁ´Ê×distinct core TTIµ½Á´IDµÄÓ³Éä
-		chain_set.push_back(chain);//ÊÕ¼¯ĞÂÉú³ÉµÄchain
+		pair<int, int> TTI = { ef->lineage_graph[chain[0]].ts, ef->lineage_graph[chain[0]].te };
+		int ID = chain_set.size();
+		TTI2ID[TTI] = ID;
+		chain_set.push_back(chain);
 	}
 
-	//ËùÓĞchainÉú³Éºó£¬ÉèÖÃÃ¿¸ölineage nodeµÄchain±àºÅ,¼´elf_id
+	
 	for (int chain_id = 0; chain_id < chain_set.size(); ++chain_id)
 	{
 		for (int node_id : chain_set[chain_id])
@@ -2071,20 +2069,19 @@ void chain_partition_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_m
 		}
 	}
 
-	ef->chain_set = chain_set;//Ä¿Ç°ÕæÊµ³¡¾°ÏÂEF_Index²»±Ø±£´æÃ¿ÌõchainÊÇÊ²Ã´£¬ÏÖÔÚ±£´æÖ»ÊÇÎªÁË¿ÉÊÓ»¯
-}
+	ef->chain_set = chain_set;
 
-const int N = 10000010, M = 10000010;//¶ş·ÖÍ¼µÄµãÊıºÍ±ßÊı,lineage graphµÄµãÊı±ØĞëĞ¡ÓÚN,±ßÊı±ØĞëĞ¡ÓÚM
-int h[N], e[M], ne[M], idx_bp;//ÓÃÁÚ½Ó±í´æ´¢¶ş·ÖÍ¼×ó²àÃ¿¸öµãµÄÓÒ²àÁÚ¾Óµã¼¯,idx_bpÓëTELµÄidxÇø·Ö
-int match[N];//±£´æµ±Ç°ÓÒ²àµãÆ¥Åäµ½µÄ×ó²àµã,Î´±»Æ¥ÅäÔòÎª0
-bool st[N];//Ñ°ÕÒÔö¹ãÂ·µÄ¹ı³ÌÖĞ¼ÇÂ¼ÓÒ²àµãÊÇ·ñÒÑÔÚÔö¹ãÂ·ÖĞ
+const int N = 10000010, M = 10000010;
+int h[N], e[M], ne[M], idx_bp;
+int match[N];
+bool st[N];
 
 void add(int a, int b)
 {
 	e[idx_bp] = b, ne[idx_bp] = h[a], h[a] = idx_bp++;
 }
 
-bool find_aug_path(int x)//´Ó×ó²àµãx³ö·¢ËÑË÷Ôö¹ãÂ·,´æÔÚÔò¸ù¾İÔö¹ãÂ·flipÆ¥Åä(match)²¢·µ»Øtrue,²»´æÔÚÔò·µ»Øfalse
+bool find_aug_path(int x)
 {
 	for (int i = h[x]; i != -1; i = ne[i])
 	{
@@ -2104,7 +2101,7 @@ bool find_aug_path(int x)//´Ó×ó²àµãx³ö·¢ËÑË÷Ôö¹ãÂ·,´æÔÚÔò¸ù¾İÔö¹ãÂ·flipÆ¥Åä(matc
 }
 
 
-vector<int> chain_set_dst[N];//ÓÉ²¢²é¼¯µÃµ½µÄÔ­Ê¼×îĞ¡Â·¾¶(chain)¸²¸Ç¼¯,Èç¹ûchainµÄ²¢²é¼¯´ú±í½ÚµãÎªi,Ôòchain±£´æÔÚchain_set_dst[i]
+vector<int> chain_set_dst[N];
 
 void chain_partition_opt(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pair<int, int>, int, pair_hash>& TTI2ID)
 {
@@ -2113,24 +2110,23 @@ void chain_partition_opt(EF_Index* ef, vector<vector<int>>& chain_set, unordered
 	memset(st, false, sizeof st);
 	idx_bp = 0;
 	int max_match = 0;
-	int vn = ef->number_of_lineage_node;//»ñÈ¡lineage graph½ÚµãÊıÁ¿vn
-	for (int lv = 0; lv < vn; ++lv)//±éÀúlineage graphÃ¿Ìõ±ß(lv, rv),¹¹ÔìÇó½â×îĞ¡Â·¾¶¸²¸ÇµÄ¶ş·ÖÍ¼
+	int vn = ef->number_of_lineage_node;
+	for (int lv = 0; lv < vn; ++lv)
 	{
 		for (int rv : ef->lineage_graph[lv].nxt_nd)
 		{
-			add(lv, rv);//½¨Á¢¶ş·ÖÍ¼ÖĞµÄ±ß
+			add(lv, rv);
 		}
 	}
-	for (int lv = 0; lv < vn; lv++)//Çó×î´óÆ¥Åä
+	for (int lv = 0; lv < vn; lv++)
 	{
 		memset(st, false, sizeof st);
 		if (find_aug_path(lv)) max_match++;
 	}
 	
-	int cn = vn - max_match;//×îĞ¡Â·¾¶¸²¸ÇÊı,¼´chainÊıÁ¿
+	int cn = vn - max_match;
 
-	//±éÀúËùÓĞÆ¥Åä±ß(¼´ÎªÂ·¾¶¸²¸ÇÖĞµÄËùÓĞ±ß),½«ÊôÓÚÍ¬Ò»Â·¾¶µÄ½Úµã²¢ÈëÍ¬Ò»¼¯ºÏ
-	init_p();//ÕâÀïÓÃµ½ÁË¼òÒ×²¢²é¼¯,¼òÒ×²¢²é¼¯´óĞ¡(VMAX)²»ÄÜÉÙÓÚlineage nodeÊıÁ¿´óĞ¡N
+	init_p();
 	for (int v = 0; v < vn; ++v)
 	{
 		if (match[v] == -1) continue;
@@ -2138,49 +2134,48 @@ void chain_partition_opt(EF_Index* ef, vector<vector<int>>& chain_set, unordered
 		combine(u, v);
 	}
 
-	for (int i = 0; i < N; ++i) chain_set_dst[i].clear();//¿ÉÄÜ¶à´Î¹¹Ôì,±ØĞëÏÈÇå¿Õchain_set_dst
+	for (int i = 0; i < N; ++i) chain_set_dst[i].clear();
+	
+	int* in_queue = new int[ef->number_of_lineage_node];
+	memset(in_queue, 0, 4 * (ef->number_of_lineage_node));
+	queue<int> q;
+	q.push(ef->entry_node_id);
+	in_queue[ef->entry_node_id] = 1;
 
-	//ÏÂÃæÖğ²ãBFS±éÀúlineage graphÖĞµÄ½ÚµãÉú³É¸÷Ìõchain,¶ÔÓÚÃ¿¸ö½Úµãu,¼ÙÉèuËùÔÚµÄ¼¯ºÏidÎªset_id,Ö±½Ó½«uÌí¼Óµ½chain_set_dst[set_id]µÄÄ©Î²
-	int* in_queue = new int[ef->number_of_lineage_node];//¹¹½¨Ò»¸öÊı×é£¬¼ÇÂ¼Ã¿¸ölineage nodeÊÇ·ñÈë¹ı¶Ó
-	memset(in_queue, 0, 4 * (ef->number_of_lineage_node));//½«Êı×é³õÊ¼»¯ÎªÈ«0
-	queue<int> q;//¹¹½¨BFS¶ÓÁĞ
-	q.push(ef->entry_node_id);//½«entry nodeÈë¶Ó
-	in_queue[ef->entry_node_id] = 1;//±ê¼Çentry nodeÎªÒÑ¾­Èë¹ı¶Ó
-
-	while (q.size())//BFS
+	while (q.size())
 	{
-		int node_id = q.front();//»ñÈ¡lineage node id
+		int node_id = q.front();
 		q.pop();
-		int set_id = find(node_id);//»ñÈ¡lineage nodeËùÔÚ²¢²é¼¯setµÄid
-		chain_set_dst[set_id].push_back(node_id);//½«¸Älineage nodeÊÕ¼¯µ½¶ÔÓ¦chain
+		int set_id = find(node_id);
+		chain_set_dst[set_id].push_back(node_id);
 		for (auto nxt_node_id : ef->lineage_graph[node_id].nxt_nd)
 		{
 			if (!in_queue[nxt_node_id])
 			{
-				//Èë¶Ó
+				
 				q.push(nxt_node_id);
-				//±ê¼ÇÎªÒÑÈë¹ı¶Ó
+				
 				in_queue[nxt_node_id] = 1;
 			}
 		}
 	}
-	delete[] in_queue;//ÊÍ·ÅÄÚ´æ
+	delete[] in_queue;
 
-	//±éÀúchain_set_dst,ÊÕ¼¯ËùÓĞchain,¼¯ºÏidÒ»¶¨ÔÚ[0,N-1]·¶Î§ÄÚ,¼´lineage nodeµÄid·¶Î§
+	
 	for (int i = 0; i < N; ++i)
 	{
-		if (chain_set_dst[i].size())//chain´æÔÚ,ÊÕ¼¯chain
+		if (chain_set_dst[i].size())
 		{
-			int fst_nd_in_chain = chain_set_dst[i][0];//»ñÈ¡chainÖĞµÚÒ»¸ö½ÚµãµÄlineage node id 
-			int ts = ef->lineage_graph[fst_nd_in_chain].ts;//»ñÈ¡¸Ã½ÚµãTTI
-			int te = ef->lineage_graph[fst_nd_in_chain].te;//»ñÈ¡¸Ã½ÚµãTTI
-			int ID = chain_set.size();//ÕâÌõchainµÄid¼´Îªµ±Ç°µÄchain_setµÄsize
-			TTI2ID[{ts, te}] = ID;//±£´æ¸Ã½Úµãµ½chain idµÄÓ³Éä
-			chain_set.push_back(chain_set_dst[i]);//ÊÕ¼¯chain
+			int fst_nd_in_chain = chain_set_dst[i][0];
+			int ts = ef->lineage_graph[fst_nd_in_chain].ts;
+			int te = ef->lineage_graph[fst_nd_in_chain].te;
+			int ID = chain_set.size();
+			TTI2ID[{ts, te}] = ID;
+			chain_set.push_back(chain_set_dst[i]);
 		}
 	}
 
-	//ËùÓĞchainÉú³Éºó£¬ÉèÖÃÃ¿¸ölineage nodeµÄchain±àºÅ,¼´elf_id
+	
 	for (int chain_id = 0; chain_id < chain_set.size(); ++chain_id)
 	{
 		for (int node_id : chain_set[chain_id])
@@ -2198,12 +2193,12 @@ void create_elf_of_chain_o(EF_Index* ef, int elf_id, vector<int>& chain)
 	ELF& elf = ef->elf_list[elf_id];
 
 	size_t number_of_vertex = Mv.size();
-	elf.v_num = number_of_vertex;//ÉèÖÃelfµÄ½ÚµãÊı£¬¼´ÎªchainÖĞµÚÒ»¸önode¶ÔÓ¦tkcµÄ½ÚµãÊı
-	for (auto vn : Mv) elf.v_raw.push_back(vn.first);//ÉèÖÃelfµÄ½Úµã¼¯£¨½Úµã±àºÅÎªÔ­Ê±ĞòÍ¼ÖĞµÄ±àºÅ£¬¿ÉÄÜ²»Á¬Ğø£©
-	sort(elf.v_raw.begin(), elf.v_raw.end());//elf½Úµã¼¯ÉıĞòÅÅĞò£¬ÓÃÓÚÓ³Éäµ½elfµÄforestÄÚµÄ½Úµã±àºÅ£¨Á¬Ğø£©
-	elf.init_mem(number_of_vertex);//³õÊ¼»¯elf foresetµÄÁÚ½Ó±íÄÚ´æ
-	vector<vector<int>> inc_edge;//chainÉÏÏàÁÚÁ½¸ödistinct coreÖ®¼äµÄÔöÁ¿±ß¼¯,ÓÃÓÚÖ®ºó¹¹½¨forest
-	compute_inc_edge(ef, chain, inc_edge);//»ñÈ¡chainÏàÁÚdistinct coreµÄÔöÁ¿±ß
+	elf.v_num = number_of_vertex;
+	for (auto vn : Mv) elf.v_raw.push_back(vn.first);
+	sort(elf.v_raw.begin(), elf.v_raw.end());
+	elf.init_mem(number_of_vertex);
+	vector<vector<int>> inc_edge;
+	compute_inc_edge(ef, chain, inc_edge);
 
 	construct_forest(ef, elf, chain, inc_edge);
 
@@ -2223,34 +2218,13 @@ void create_elf_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pa
 		if (__te < te)
 		{
 			cntinfo[INFO::RLC]++;
-			//cntinfo[INFO::PoR]++;
-			//for (int c = te - 1; c >= __te; --c)//Accumulate PoR Cell
-			//	if ((*prune_flag)[ts - Ts][c - Ts] == 0)
-			//(*prune_flag)[ts - Ts][c - Ts] = 1;
 			te = __te;//PoR
 		}
 	}; //PoR
 	auto sqz = [&](int __ts, int __te) {
 		if (ts < __ts || te > __te) { //Overline Trigger
 			cntinfo[INFO::SQZ]++;
-			//if (ts < __ts) {//Accumulate PoU Cell
-			//	cntinfo[INFO::PoU]++;
-			//	for (int r = ts + 1; r <= __ts; ++r)
-			//		for (int c = te; c >= r; --c)
-			//			if ((*prune_flag)[r - Ts][c - Ts] == 0)
-			//		(*prune_flag)[r - Ts][c - Ts] = 2;
-			//}
-			//if (__te < te) {//Accumulate PoL Cell
-			//	cntinfo[INFO::PoL]++;
-			//	for (int r = __ts + 1; r <= __te; ++r)
-			//		for (int c = te; c > __te; --c)
-			//			if ((*prune_flag)[r - Ts][c - Ts] == 0)
-			//		(*prune_flag)[r - Ts][c - Ts] = 3;
-			//	cntinfo[INFO::PoR]++;
-			//	for (int c = te - 1; c >= __te; --c)
-			//		if ((*prune_flag)[ts - Ts][c - Ts] == 0)
-			//	(*prune_flag)[ts - Ts][c - Ts] = 1;
-			//}
+			
 			_ts = __ts;  //PoU
 			_te = __te;  //PoL
 		}
@@ -2260,7 +2234,6 @@ void create_elf_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pa
 		if (ts < __ts) //Overline Triggered
 		{
 			cntinfo[INFO::TAG]++;
-			//cntinfo[INFO::PoU]++;
 			for (int r = ts + 1; r <= __ts; ++r)
 			{
 				if (endr.count(r) == 0)
@@ -2268,10 +2241,6 @@ void create_elf_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pa
 				endr[r] = max(endr[r], te + 1); //Tag for PoU
 			}
 
-			//for (int r = ts + 1; r <= __ts; ++r)//Accumulate PoU Cell
-			//	for (int c = te; c >= r; --c)
-			//		if ((*prune_flag)[r - Ts][c - Ts] == 0)
-			//	(*prune_flag)[r - Ts][c - Ts] = 2;
 		}
 	};
 	auto pou = [&](int ts, int te) { return endr.count(ts) && endr[ts] >= te; };//PoU
@@ -2288,10 +2257,10 @@ void create_elf_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pa
 			
 			pair<int, int> TTI = { tsarc[head], tsarc[tail] };
 			tti_set.insert(TTI);
-			if (TTI2ID.find(TTI) != TTI2ID.end())//µ±Ç°distinct coreÎªÄ³Ò»chainÊ×,Éú³ÉchainµÄMTSF
+			if (TTI2ID.find(TTI) != TTI2ID.end())//å½“å‰distinct coreä¸ºæŸä¸€chainé¦–,ç”Ÿæˆchainçš„MTSF
 			{
 				int ID = TTI2ID[TTI];
-				if (ef->elf_list[ID].idx == 0) //OTCD¿ÉÄÜ·ÃÎÊÍ¬Ò»¸ötz¶à´Î£¬±ØĞëÈ·¶¨ELFÈÔÎ´±»¹¹Ôì²Å¹¹Ôì
+				if (ef->elf_list[ID].idx == 0)
 				{
 					__bkp();
 					create_elf_of_chain_o(ef, ID, chain_set[ID]);
@@ -2313,12 +2282,12 @@ void create_elf_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pa
 
 void elf_construct_o(EF_Index* ef)
 {
-	vector<vector<int>> chain_set;//ËùÓĞÁ´£¬»áÔÚchain_partition_oÖĞ¼ÆËã£¬Ã¿¸öÁ´±£´æµÄÊÇlineage graph½Úµã±àºÅĞòÁĞ
-	static unordered_map<pair<int, int>, int, pair_hash> TTI2ID;//ËùÓĞÁ´Á´Ê×distinct coreµÄTTIµ½Á´±àºÅµÄÓ³Éä£¬»áÔÚchain_partition_oÖĞ¼ÆËã
-	TTI2ID.clear();//Ã¿´Î¹¹½¨ĞÂµÄELFÖ®Ç°ÏÈÇå¿ÕÁ´Ê×µ½Á´IDµÄÓ³Éä¼¯
+	vector<vector<int>> chain_set;
+	static unordered_map<pair<int, int>, int, pair_hash> TTI2ID;
+	TTI2ID.clear();
 	auto t0 = system_clock::now();
 
-	chain_partition_opt(ef, chain_set, TTI2ID);//´Ë´¦¿ÉÑ¡chain_partition_o / wchain_partition_o / chain_partition_opt
+	chain_partition_opt(ef, chain_set, TTI2ID);
 
 	auto t1 = system_clock::now();
 	auto clapse_ns = duration_cast<nanoseconds>(t1 - t0);
@@ -2336,7 +2305,7 @@ void elf_construct_o(EF_Index* ef)
 
 EF_Index* ef_construct_o(int Ts, int Te, int K)
 {
-	EF_Index* ef = new EF_Index(Ts, Te, K);//³õÊ¼»¯EF_Index,Îª·µ»ØµÄ¶ÔÏó
+	EF_Index* ef = new EF_Index(Ts, Te, K);
 
 	auto t0 = system_clock::now();
 
@@ -2351,23 +2320,23 @@ EF_Index* ef_construct_o(int Ts, int Te, int K)
 	return ef;
 }
 
-vector<int> cc_set[VMAX];//Ä³¸öTKCµÄËùÓĞÁ¬Í¨·ÖÁ¿ÖĞ¼äÊı¾İ£¬¶ÔÓ¦TKCÁ¬Í¨ĞÔµÄ²¢²é¼¯£¬´ú±í½ÚµãÎªvµÄÁ¬Í¨·ÖÁ¿´æ´¢ÔÚcc_set[v];
-void get_cc_of_tkc(int Ts, int Te, int k, vector<vector<int>>& ccs)//»òÈ¡Ä³¸öTKCµÄÈ«²¿Á¬Í¨·ÖÁ¿£¬Êä³öµ½ccs;
+vector<int> cc_set[VMAX];
+void get_cc_of_tkc(int Ts, int Te, int k, vector<vector<int>>& ccs)
 {
 	ccs.clear();
-	for (int i = 0; i < VMAX; ++i) cc_set[i].clear();//Çå¿Õcc_set
-	//ÏÂÃæÈıĞĞ³õÊ¼»¯tkcµÄTEL
+	for (int i = 0; i < VMAX; ++i) cc_set[i].clear();//æ¸…ç©ºcc_set
+	//ä¸‹é¢ä¸‰è¡Œåˆå§‹åŒ–tkcçš„TEL
 	buildtel(Ts, Te);
 	initMH(Ts, Te);
 	decomp(k);
-	init_p();//³õÊ¼»¯²¢²é¼¯
-	for (auto edge_freq : Mc)//¹¹½¨tkcÁ¬Í¨ĞÔµÄ²¢²é¼¯
+	init_p();
+	for (auto edge_freq : Mc)
 	{
 		int u = edge_freq.first.first;
 		int v = edge_freq.first.second;
 		combine(u, v);
 	}
-	for (auto vertex_deg : Mv)//½«²¢²é¼¯ÖĞ´ú±í½ÚµãÎªrvµÄËùÓĞ½Úµã´æ´¢µ½cc_set[rv]
+	for (auto vertex_deg : Mv)
 	{
 		int v = vertex_deg.first;
 		int rv = find(v);
@@ -2382,16 +2351,16 @@ void get_cc_of_tkc(int Ts, int Te, int k, vector<vector<int>>& ccs)//»òÈ¡Ä³¸öTKC
 	}
 }
 
-void print_tccs_ef_clapse_per_cc(EF_Index* ef, int _ts, int _te, int _k)//Êä³öTCCS-EF²éÑ¯TKC¸÷¸öÁ¬Í¨·ÖÁ¿µÄÓÃÊ±
+void print_tccs_ef_clapse_per_cc(EF_Index* ef, int _ts, int _te, int _k)
 {
-	vector<vector<int>> ccs;//TKCÁ¬Í¨·ÖÁ¿¼¯ºÏ 
-	get_cc_of_tkc(_ts, _te, _k, ccs);//»ñÈ¡TKCËùÓĞÁ¬Í¨·ÖÁ¿
-	long long tot_clapse = 0ll;//Í³¼ÆTCCS²éÑ¯¸÷¸öÁ¬Í¨·ÖÁ¿µÄ×ÜÊ±¼ä
+	vector<vector<int>> ccs;
+	get_cc_of_tkc(_ts, _te, _k, ccs);
+	long long tot_clapse = 0ll;
 	for (int i = 0; i < ccs.size(); ++i)
 	{
 		vector<int> ans;
 		auto t0 = system_clock::now();
-		optimal_tccs(ef, _ts, _te, _k, ccs[i][0], ans);//ÓÃTCCS»ñÈ¡Õâ¸öCC
+		optimal_tccs(ef, _ts, _te, _k, ccs[i][0], ans);
 		auto t1 = system_clock::now();
 		auto clapse_ns = duration_cast<nanoseconds>(t1 - t0);
 		tot_clapse += clapse_ns.count();
@@ -2399,37 +2368,37 @@ void print_tccs_ef_clapse_per_cc(EF_Index* ef, int _ts, int _te, int _k)//Êä³öTC
 	}
 }
 
-void tccs_ol(int _ts, int _te, int _k, int _v, vector<int>& ans)//´ÓG[Ts,Te]ÖĞµ¼³öTKC,ÔÙ¼ÆËãÁ¬Í¨ĞÔµÃµ½´ğ°¸
+void tccs_ol(int _ts, int _te, int _k, int _v, vector<int>& ans)
 {
-	//Ö´ĞĞÇ°GµÄTELÒÑ¾­¼ÓÔØµ½TELµÄÔËĞĞÊµÀıÖĞ
+	
 	tcdop(_ts, _te, _k);
-	init_p();//³õÊ¼»¯²¢²é¼¯
-	for (auto edge_freq : Mc)//¹¹½¨tkcÁ¬Í¨ĞÔµÄ²¢²é¼¯
+	init_p();//åˆå§‹åŒ–å¹¶æŸ¥é›†
+	for (auto edge_freq : Mc)
 	{
 		int u = edge_freq.first.first;
 		int v = edge_freq.first.second;
 		combine(u, v);
 	}
 	int pv = find(_v);
-	for (auto vertex_deg : Mv)//TKCÖĞËùÓĞºÍ_v´¦ÓÚÍ¬Ò»¼¯ºÏµÄµã¼´Îª´ğ°¸
+	for (auto vertex_deg : Mv)
 	{
 		int v = vertex_deg.first;
 		if (find(v) == pv) ans.push_back(v);
 	}
 }
 
-void print_tccs_ol_clapse_per_cc(int Ts, int Te, int _ts, int _te, int _k)//Êä³öTCCS-OL²éÑ¯TKC¸÷¸öÁ¬Í¨·ÖÁ¿µÄÓÃÊ±,[Ts,Te]ÓëÓÃÓÚ±È½ÏµÄTCCS-EFµÄEF-Index¹¹ÔìÇø¼äÏàÍ¬
+void print_tccs_ol_clapse_per_cc(int Ts, int Te, int _ts, int _te, int _k)
 {
-	vector<vector<int>> ccs;//TKCÁ¬Í¨·ÖÁ¿¼¯ºÏ 
-	get_cc_of_tkc(_ts, _te, _k, ccs);//»ñÈ¡TKCËùÓĞÁ¬Í¨·ÖÁ¿
-	long long tot_clapse = 0ll;//Í³¼ÆTCCS²éÑ¯¸÷¸öÁ¬Í¨·ÖÁ¿µÄ×ÜÊ±¼ä
+	vector<vector<int>> ccs;
+	get_cc_of_tkc(_ts, _te, _k, ccs);
+	long long tot_clapse = 0ll;
 	for (int i = 0; i < ccs.size(); ++i)
 	{
 		vector<int> ans;
 		buildtel(Ts, Te);
 		initMH(Ts, Te);
 		auto t0 = system_clock::now();
-		tccs_ol(_ts, _te, _k, ccs[i][0], ans);//ÓÃTCCS»ñÈ¡Õâ¸öCC
+		tccs_ol(_ts, _te, _k, ccs[i][0], ans);
 		if (ans.size() == 1)
 		{
 			printf("Alert: answer size 1\n");
@@ -2449,58 +2418,55 @@ void ef_expand_forward(EF_Index* ef, int TE)
 	int _K = ef->_K;
 	if (TE != _TE + 1)
 	{
-		//·½·¨½öÖ§³Öµ¥²½À©ÕÅ¸üĞÂ
+		
 		printf("TE != _TE + 1, updating request not supported\n");
 		return;
 	}
 	
-	//ÏÂÃæÈıĞĞ¹¹ÔìĞÂÔöTEÁĞµÄµÚÒ»¸öcellµÄdc,ÎªÖ®ºóTCD×ö×¼±¸
+	
 	buildtel(_TS, TE);
 	initMH(_TS, TE);
 	decomp(_K);
 
-	if (tsarc[tail] != TE)//tailÀíÂÛÉÏ²»Ó¦¸ÃÎª-1,·ñÔò[_TS,TE]ÏÂ²»´æÔÚtkc,ÄÇÃ´´«ÈëµÄEF_IndexÓ¦Îª¿Õ
+	if (tsarc[tail] != TE)
 	{
-		//À©ÕÅ²»²úÉúĞÂµÄtz,¶ÔEF_Index½á¹¹ÎŞÓ°Ïì,¸üĞÂ¹¹Ôì¿ç¶ÈÓÒ±ß½çºóÖ±½Ó·µ»Ø
+		
 		ef->_TE = TE;
 		return;
 	}
 
-	int largest_ts_in_nw_tz = 0;//×î´óµÄts,Ê¹µÃ[ts,TE]ÊôÓÚÒ»¸öĞÂÔöµÄtz,»áÔÚTCDÖĞ¼ÇÂ¼,ÓÃÓÚºóĞø¹¹½¨lineage relation
-	vector<L_NODE> nd_of_nw_tz;//ÊÕ¼¯ĞÂÔötzµÄTTI,ÎªÓĞĞòµÄÁĞ±í,ÔÚĞÂlineage graphÖĞµÚiÏîÖ¸ÏòµÚi+1Ïî(lineage relation, edge in lineage graph)
+	int largest_ts_in_nw_tz = 0;
+	vector<L_NODE> nd_of_nw_tz;
 
-	//½ÓÏÂÀ´¶ÔĞÂÔöµÄÒ»ÁĞcell(Çø¼ä)Ö´ĞĞTCD,»ñÈ¡ÉÏÃæÁ½¸ö½á¹û
+	
 	int ts = _TS, te = TE;
-	//Ö»Òªµ±Ç°cellµÄTTIÓÒ±ß½çÈÔÎªTE,ÔòËµÃ÷µ±Ç°cell[ts,te]¶ÔÓ¦Ò»¸öĞÂÔöµÄtz
-	do {//½øÈëÑ­»·Ê±,µ±Ç°µÄds¶ÔÓ¦µÚÒ»¸öcell,ÇÒÒÑ¾­È·¶¨ÆäÊôÓÚÒ»¸öĞÂÔötz
+	
+	do {
 
-		L_NODE nw_nd;//ÎªĞÂtz´´½¨L_NODE
-		nw_nd.ts = tsarc[head];//ÉèÖÃL_NODEµÄTTI
-		nw_nd.te = tsarc[tail];//ÉèÖÃL_NODEµÄTTI
-		nw_nd.weight = Mv.size();//ÉèÖÃL_NODEµÄÈ¨Öµ,¼´ÎªdsÖĞµÄ½ÚµãÊı
-		nd_of_nw_tz.push_back(nw_nd);//ÊÕ¼¯ĞÂÔöL_NODE
+		L_NODE nw_nd;
+		nw_nd.ts = tsarc[head];
+		nw_nd.te = tsarc[tail];
+		nw_nd.weight = Mv.size();
+		nd_of_nw_tz.push_back(nw_nd);
 
-		ts = tsarc[head]; //Local Pruning,Ìø¹ıÖ®ºóµÄ¼¸¸ö¾ßÓĞÏàÍ¬TTIµÄcell
+		ts = tsarc[head]; 
 
-		largest_ts_in_nw_tz = ts;//¸üĞÂlargest_ts_in_nw_tz
+		largest_ts_in_nw_tz = ts;
 
-		ts++;//ts½øÈëÕâ¸öĞÂÔötzÖ®ºóÏàÁÚµÄÒ»¸öcell
-		tcdop(ts, te, _K);//»ñÈ¡ĞÂcellµÄds
+		ts++;
+		tcdop(ts, te, _K);
 	} while(tail != -1 && head != -1 && tsarc[head] <= tsarc[tail] && tsarc[tail] == TE);
-	//Ç°Èı¸öÖÕÖ¹Ìõ¼ş:ĞÂÔöÁĞµÄ×îµ×²¿cellËùÔÚµÄĞĞ´óÓÚÖ®Ç°µÄ×î´óĞĞ,ÕâÊ±×îºóÒ»¸öcellÎª»Òcell(dsÎª¿Õ)
-	//µÚËÄ¸öÖÕÖ¹Ìõ¼ş:µ±Ç°µÄcellÒÑ¾­²¢ÈëÖ®Ç°ÁĞµÄtz,Global Pruning,¸üĞÂÌáÇ°½áÊø
+	
 
+	size_t nw_num_of_lineage_node = ef->number_of_lineage_node + nd_of_nw_tz.size();
 
-	//ÏÂÃæÁ½ÖØwhileÑ­»·¹¹½¨ĞÂµÄlineage node
-	size_t nw_num_of_lineage_node = ef->number_of_lineage_node + nd_of_nw_tz.size();//¼ÆËãĞÂµÄlineage node×ÜÊı(tz×ÜÊı)
+	L_NODE* nw_lg = new L_NODE[nw_num_of_lineage_node];
 
-	L_NODE* nw_lg = new L_NODE[nw_num_of_lineage_node];//ÎªĞÂµÄlineage graph·ÖÅä¿Õ¼ä
-
-	std::unordered_map<TTI, int, pair_hash> tti_to_node;//TTIµ½lineage node idµÄÓ³Éä
-														//ÓÃÓÚºóĞøÀûÓÃzone adjacency¹¹½¨lineage relation
+	std::unordered_map<TTI, int, pair_hash> tti_to_node;
+													
 
 	int i = 0;
-	while (i < ef->number_of_lineage_node)//¾ÉµÄlineage graphÖ±½Ó¿½±´
+	while (i < ef->number_of_lineage_node)
 	{
 		nw_lg[i].ts = ef->lineage_graph[i].ts;
 		nw_lg[i].te = ef->lineage_graph[i].te;
@@ -2514,7 +2480,7 @@ void ef_expand_forward(EF_Index* ef, int TE)
 	}
 
 	int j = 0;
-	while(i < nw_num_of_lineage_node)//ĞÂÔöµÄlineage node³õÊ¼»¯TTIºÍweight
+	while(i < nw_num_of_lineage_node)
 	{
 		nw_lg[i].ts = nd_of_nw_tz[j].ts;
 		nw_lg[i].te = nd_of_nw_tz[j].te;
@@ -2524,54 +2490,54 @@ void ef_expand_forward(EF_Index* ef, int TE)
 		j++;
 	}
 
-	//ÏÂÃæ¹¹½¨ĞÂµÄlineage relation(lineage graphÖĞµÄ±ß)
 
-	for (int i = 0; i < nd_of_nw_tz.size() - 1; ++i)//¹¹½¨ĞÂÔötzÖ®¼äµÄ±ß
+
+	for (int i = 0; i < nd_of_nw_tz.size() - 1; ++i)
 	{
-		//»ñÈ¡ÆğÊ¼½ÚµãµÄid
+		
 		int ts_src = nd_of_nw_tz[i].ts;
 		int te_src = nd_of_nw_tz[i].te;
 		int nd_src = tti_to_node[{ts_src, te_src}];
 
-		//»ñÈ¡Ä¿±ê½ÚµãµÄid
+		
 		int ts_dst = nd_of_nw_tz[i + 1].ts;
 		int te_dst = nd_of_nw_tz[i + 1].te;
 		int nd_dst = tti_to_node[{ts_dst, te_dst}];
 
-		//Ìí¼ÓĞÂ±ß(Õı·´Ïò)
+		
 		nw_lg[nd_src].nxt_nd.push_back(nd_dst);
 		nw_lg[nd_dst].pre_nd.push_back(nd_src);
 	}
 
-	//ÏÂÃæ¶Ô_TEÁĞ½øĞĞTCD,¹¹½¨ĞÂÔötzºÍ¾ÉtzÖ®¼äµÄĞÂÔö±ß
+
 	ts = _TS, te = _TE;
 	buildtel(ts, te);
 	initMH(ts, te);
 	decomp(_K);
 
-	do {//TEÁĞµÚÒ»¸ödsÒ»¶¨ºÍÒ»¸öĞÂÔöµÄdsĞÎ³Élineage relation
+	do {
 		int TTI_ts = tsarc[head];
 		int TTI_te = tsarc[tail];
 		
-		//¸ù¾İcorner interval,[TTI_ts,TE]±ØÎªÒ»¸öĞÂtzµÄTTI,ÇÒËüºÍÕâ¸ö¾ÉtzÖ®¼ä¾ßÓĞlineage relation
+		
 		int nd_src = tti_to_node[{TTI_ts, TE}];
 		int nd_dst = tti_to_node[{TTI_ts, TTI_te}];
 
-		//Ìí¼ÓĞÂ±ß(Õı·´Ïò)
+		
 		nw_lg[nd_src].nxt_nd.push_back(nd_dst);
 		nw_lg[nd_dst].pre_nd.push_back(nd_src);
-		ts = TTI_ts;//Ëõ½ôµ½TTI
-		ts++;//½øÈëÏÂÒ»¸ötz
-		tcdop(ts, te, _K);//»ñÈ¡ĞÂtzµÄds
+		ts = TTI_ts;
+		ts++;
+		tcdop(ts, te, _K);
 	} while (tail != -1 && head != -1 && tsarc[head] <= tsarc[tail] && ts <= largest_ts_in_nw_tz);
-	//×¢Òâ,largest_ts_in_nw_tz¿ÉÄÜ´óÓÚTEÁĞ×î´óÓĞĞ§µÄÆğÊ¼Ê±¿Ì,ÕâÊ±ds»á×îÖÕÎª¿Õ,Ç°Èı¸öÌõ¼ş½«Ê¹Ñ­»·½áÊø
+	
 
-	//ÏÂÃæÅĞ¶Ïevo_mapÊÇ·ñĞèÒª¸üĞÂ,Ö»ĞèÒªÅĞ¶Ï×îºóÒ»¸öĞÂÔöµÄ½ÚµãÓĞÃ»ÓĞºó¼Ì½Úµã¼´¿É
-	int num_of_nw_tz = nd_of_nw_tz.size();//»ñÈ¡ĞÂÔö½ÚµãµÄÊıÁ¿,ÔËĞĞµ½´ËÖÁÉÙÓĞÒ»¸öĞÂÔötz
-	int last_nw_nd = tti_to_node[{nd_of_nw_tz[num_of_nw_tz - 1].ts, nd_of_nw_tz[num_of_nw_tz - 1].te}];//»ñÈ¡×îºóÒ»¸öĞÂÔö½ÚµãµÄid
-	if (nw_lg[last_nw_nd].nxt_nd.size() == 0)//ËµÃ÷×îºóÒ»¸öĞÂÔönd¶ÔÓ¦Ò»¸öĞÂÔöµÄminimal TTI,¼´evo_mapÏî
+	
+	int num_of_nw_tz = nd_of_nw_tz.size();
+	int last_nw_nd = tti_to_node[{nd_of_nw_tz[num_of_nw_tz - 1].ts, nd_of_nw_tz[num_of_nw_tz - 1].te}];
+	if (nw_lg[last_nw_nd].nxt_nd.size() == 0)
 	{
-		A_NODE* nw_evo = new A_NODE[ef->length_of_evo_array + 1];//·ÖÅäevo_array,³¤¶È+1
+		A_NODE* nw_evo = new A_NODE[ef->length_of_evo_array + 1];
 		int i = 0;
 		while (i < ef->length_of_evo_array)
 		{
@@ -2581,50 +2547,50 @@ void ef_expand_forward(EF_Index* ef, int TE)
 			i++;
 		}
 
-		//ÉèÖÃĞÂÔöminimal TTIµÄevo_mapÏî
+		
 		nw_evo[i].ts = nd_of_nw_tz[num_of_nw_tz - 1].ts;
 		nw_evo[i].te = nd_of_nw_tz[num_of_nw_tz - 1].te;
 		nw_evo[i].lineage_node = tti_to_node[{nw_evo[i].ts, nw_evo[i].te}];
 
-		//ÊÍ·Å¾ÉµÄevo_array,ÖØĞÂÉèÖÃÎªĞÂµÄevo_array
+		
 		delete[] ef->evo_array;
 		ef->evo_array = nw_evo;
-		ef->length_of_evo_array = ef->length_of_evo_array + 1;//evo_array³¤¶È+1
+		ef->length_of_evo_array = ef->length_of_evo_array + 1;//evo_arrayé•¿åº¦+1
 	}
 
-	//ÖÁ´Ë,lineage graphºÍevo_array¾ù¸üĞÂÍê±Ï
-	//ÊÍ·Å¾ÉµÄlineage graph,ÖØĞÂÉèÖÃÎªĞÂµÄlineage graph
+	
+	
 	delete[] ef->lineage_graph;
 	ef->lineage_graph = nw_lg;
 
-	unordered_set<int> chain_head;//ÊÕ¼¯ËùÓĞÁ´µÚÒ»¸önodeµÄid
+	unordered_set<int> chain_head;
 
 	for (auto chain : ef->chain_set)
 	{
 		chain_head.insert(chain[0]);
 	}
 
-	//ÏÂÃæ¸üĞÂELF,Ê×ÏÈÅĞ¶ÏÊÇĞÂÔöÒ»¸öELF»¹ÊÇ²¢ÈëÒ»¸öÒÑÓĞELF
-	if (nw_lg[last_nw_nd].nxt_nd.size() && chain_head.find(nw_lg[last_nw_nd].nxt_nd[0]) != chain_head.end())//ÏÂÒ»¸önode´æÔÚÇÒÎªÒ»¸öÒÑ´æÔÚÁ´µÄÁ´Ê×
+	
+	if (nw_lg[last_nw_nd].nxt_nd.size() && chain_head.find(nw_lg[last_nw_nd].nxt_nd[0]) != chain_head.end())
 	{
-		//ÏÂÃæÁ½ĞĞ»ñÈ¡²¢ÈëµÄ¾ÉchainµÄid
-		int head_id = nw_lg[last_nw_nd].nxt_nd[0];//»ñÈ¡Ó¦²¢ÈëµÄchainµÄchainÊ×nodeµÄid
-		int elf_id = nw_lg[head_id].elf_id;//»ñÈ¡Ó¦²¢ÈëchainµÄchain id,Í¬Ê±Ò²ÊÇelfµÄid
+		
+		int head_id = nw_lg[last_nw_nd].nxt_nd[0];
+		int elf_id = nw_lg[head_id].elf_id;
 
-		//ÏÂÃæÁ½ÖØforÑ­»·¹¹½¨ºÏ²¢ºóµÄĞÂchain
-		vector<int> nw_chain;//ĞÂchain
-		for (int i = ef->number_of_lineage_node; i < nw_num_of_lineage_node; ++i)//i: number_of_lineage_node--nw_num_of_lineage_nodeÕâÒ»¶ÎÖµ¼´ÎªĞÂÔönodeµÄid
+		
+		vector<int> nw_chain;//æ–°chain
+		for (int i = ef->number_of_lineage_node; i < nw_num_of_lineage_node; ++i)
 		{
-			nw_chain.push_back(i);//ĞÂÔö½ÚµãÏÈ¼ÓÈëĞÂchain,ÒòÎªËüÃÇÔÚÇ°Ãæ
+			nw_chain.push_back(i);
 		}
 		for (auto nd_id : ef->chain_set[elf_id])
 		{
-			nw_chain.push_back(nd_id);//²¢ÈëµÄ¾ÉchainµÄ½Úµã´¦ÓÚĞÂchainµÄºóÃæ
+			nw_chain.push_back(nd_id);
 		}
 
-		ef->chain_set[elf_id] = nw_chain;//¸üĞÂchain
+		ef->chain_set[elf_id] = nw_chain;
 
-		//ÏÂÃæÇå¿ÕÔ­ÓĞµÄelf
+		
 		delete[] ef->elf_list[elf_id].elf_head;
 		delete[] ef->elf_list[elf_id].elf_nbr;
 		delete[] ef->elf_list[elf_id].elf_nxt;
@@ -2633,19 +2599,19 @@ void ef_expand_forward(EF_Index* ef, int TE)
 		ef->elf_list[elf_id].v_raw.clear();
 		ef->elf_list[elf_id].v_num = 0;
 
-		//×îºó¹¹ÔìĞÂµÄELF
+		
 		create_elf_of_chain(ef, elf_id, nw_chain);
 	}
-	else //ĞÂÔöÒ»Ìõ¶ÀÁ¢µÄchain,¹¹½¨ÏàÓ¦µÄELF
+	else 
 	{
-		vector<int> nw_chain;//ĞÂchain
-		for (int i = ef->number_of_lineage_node; i < nw_num_of_lineage_node; ++i)//i: number_of_lineage_node--nw_num_of_lineage_nodeÕâÒ»¶ÎÖµ¼´ÎªĞÂÔönodeµÄid
+		vector<int> nw_chain;
+		for (int i = ef->number_of_lineage_node; i < nw_num_of_lineage_node; ++i)
 		{
-			nw_chain.push_back(i);//ĞÂÔö½ÚµãÒÀ´Î¼ÓÈëĞÂchain
+			nw_chain.push_back(i);
 		}
 
-		ELF* nw_elf_list = new ELF[ef->number_of_elf + 1];//·ÖÅäĞÂµÄelf_list¿Õ¼ä,³¤¶È+1
-		for (int i = 0; i < ef->number_of_elf; ++i)//ÒÆ¶¯¸´ÖÆËùÓĞ¾ÉµÄELF
+		ELF* nw_elf_list = new ELF[ef->number_of_elf + 1];
+		for (int i = 0; i < ef->number_of_elf; ++i)
 		{
 			nw_elf_list[i].elf_head = ef->elf_list[i].elf_head;
 			nw_elf_list[i].elf_label = ef->elf_list[i].elf_label;
@@ -2656,20 +2622,20 @@ void ef_expand_forward(EF_Index* ef, int TE)
 			nw_elf_list[i].v_raw = ef->elf_list[i].v_raw;
 		}
 
-		//ÊÍ·Å¾ÉµÄelf_list,ÉèÖÃÎªĞÂµÄelf_list
+		
 		delete[] ef->elf_list;
 		ef->elf_list = nw_elf_list;
 
-		//¹¹ÔìĞÂÔöµÄchainµÄELF,idÎª¾ÉµÄelf_list³¤¶È
+		
 		create_elf_of_chain(ef, ef->number_of_elf, nw_chain);
-		ef->number_of_elf++;//elf_list³¤¶È+1
-		ef->chain_set.push_back(nw_chain);//ĞÂchain¼ÓÈëchain_set
+		ef->number_of_elf++;
+		ef->chain_set.push_back(nw_chain);
 
 	}
 
-	ef->entry_node_id = ef->number_of_lineage_node;//¼ÈÈ»ÓĞĞÂÔötz,ÄÇÃ´ĞÂµÄÈë¿Únode±ØÎªĞÂÔöµÄµÚÒ»¸ötz¶ÔÓ¦node,Æäid¾ÍÊÇ¾Élineage_graphµÄ³¤¶È(lineage nodeÊıÁ¿)
-	ef->number_of_lineage_node = nw_num_of_lineage_node;//¸üĞÂlineage node ÊıÁ¿
-	ef->_TE = TE;//×îºóEF_IndexµÄ¹¹ÔìÇø¼ä¸üĞÂµ½ĞÂµÄÓÒ±ß½çTE
+	ef->entry_node_id = ef->number_of_lineage_node;
+	ef->number_of_lineage_node = nw_num_of_lineage_node;
+	ef->_TE = TE;
 }
 
 void dfs_label(int v, int fa, ELF& elf, set<pair<int, int>>& cc_label)
@@ -2698,7 +2664,7 @@ void dfs_edge(int v, int fa, ELF& elf, vector<pair<pair<int, int>, pair<int, int
 
 void remap_gnu_e(int gnu, const char* graph_name)//remap by granularity for edge
 {
-	if (gnu <= 0 || gnu % 3600)//Ö¸¶¨Á£¶È²»ºÏ·¨
+	if (gnu <= 0 || gnu % 3600)
 	{
 		printf("remap_gnu_e:Invalid gnu value\n");
 		return;
@@ -2714,14 +2680,14 @@ void remap_gnu_e(int gnu, const char* graph_name)//remap by granularity for edge
 
 	char gnu_c_str[10];
 	string gnu_str;
-	if (gnu < 3600 * 24)//Á£¶ÈĞ¡ÓÚ1Ìì,ÎÄ¼şÃûÇ°×ºÎª XXh
+	if (gnu < 3600 * 24)
 	{
 		int gnu_h = gnu / 3600;
 		sprintf(gnu_c_str, "%d", gnu_h);
 		string gnu_num(gnu_c_str);
 		gnu_str = gnu_num + "h";
 	}
-	else//Á£¶È³¬¹ı1Ìì,ÎÄ¼şÃûÇ°×ºÎª XXd
+	else//ç²’åº¦è¶…è¿‡1å¤©,æ–‡ä»¶åå‰ç¼€ä¸º XXd
 	{
 		int gnu_d = gnu / 3600 / 24;
 		sprintf(gnu_c_str, "%d", gnu_d);
@@ -2731,7 +2697,7 @@ void remap_gnu_e(int gnu, const char* graph_name)//remap by granularity for edge
 
 	string graph_name_str(graph_name);
 
-	string nw_graph_name_str = "./" + gnu_str + "_" + graph_name_str.substr(2);//ĞÂÎÄ¼şÃûÎªXX(h|d)_(Ô­Ê¼ÎÄ¼şÃû)
+	string nw_graph_name_str = "./" + gnu_str + "_" + graph_name_str.substr(2);
 
 	ofstream ofile(nw_graph_name_str.c_str());
 	if (ofile.is_open() == false)
@@ -2769,14 +2735,14 @@ void filter_self_loop(const char* filename)
 	ofile.close();
 }
 
-vector<int> ccv_set[VMAX];//±£´æÃ¿¸öTCCµÄµã±àºÅ¼¯
-vector<int> cct_set[VMAX];//±£´æÃ¿¸öTCCµÄÊ±¼ä´Á¼¯
-int cce_cnt[VMAX];//±£´æÃ¿¸öTCCµÄconnectionÊıÁ¿
-vector<int> cce_set[VMAX];//±£´æÃ¿¸öTCCµÄTemporal Edge¼¯ºÏ
+vector<int> ccv_set[VMAX];
+vector<int> cct_set[VMAX];
+int cce_cnt[VMAX];
+vector<int> cce_set[VMAX];
 
-void init_tcc_prop_set()//³õÊ¼»¯TCCµÄÈı¸öProperty Set£¬ÔÚ¶ÔÃ¿¸öTZ(Time Zone)½øĞĞLS(Local Search)Ö®Ç°¶¼ĞèÒªµ÷ÓÃ
+void init_tcc_prop_set()
 {
-	for (int i = 0; i < VMAX; ++i)//³õÊ¼»¯¸÷¸öTCCµÄ
+	for (int i = 0; i < VMAX; ++i)
 	{
 		ccv_set[i].clear();
 		cct_set[i].clear();
@@ -2785,34 +2751,32 @@ void init_tcc_prop_set()//³õÊ¼»¯TCCµÄÈı¸öProperty Set£¬ÔÚ¶ÔÃ¿¸öTZ(Time Zone)½øĞĞ
 	}
 }
 
-void compute_tcc_prop_set(ZONE tz, int k)//»ñÈ¡Time ZoneµÄTKC¶ÔÓ¦TCCµÄÈı¸öProperty Set, ÊäÈëÎªZONE
+void compute_tcc_prop_set(ZONE tz, int k)
 {
-	//»ñÈ¡TZµÄTTI
+	
 	auto TTI = tz.first;
 	int TTI_TS = TTI.first, TTI_TE = TTI.second;
 
-	//ÏÂÃæÈıĞĞ³õÊ¼»¯TKCµÄTELºÍÈı¸ö¸¨Öú½á¹¹
+	
 	buildtel(TTI_TS, TTI_TE);
 	initMH(TTI_TS, TTI_TE);
 	decomp(k);
 
-	//ÏÂÃæ´úÂë¿é»ñÈ¡TKCµÄ¸÷¸öTCC,±£´æµ½Èı¸öTCC Property Set
-	//(u,v)´ú±íÒ»¸öconnectionµÄÁ½¸ö¶Ëµã,r´ú±í´¦ÀíµÄµã»ò±ßËùÔÚµÄTCC±àºÅ(¼´²¢²é¼¯´ú±íÔª)
 
-	init_p();//³õÊ¼»¯²¢²é¼¯
-	for (auto edge_freq : Mc)//±éÀúTKCËùÓĞconnection,¹¹½¨tkcÁ¬Í¨ĞÔµÄ²¢²é¼¯
+	init_p();
+	for (auto edge_freq : Mc)
 	{
 		int u = edge_freq.first.first;
 		int v = edge_freq.first.second;
 		combine(u, v);
 	}
-	for (auto vertex_deg : Mv)//±éÀúTKCËùÓĞ½áµã,ÊÕ¼¯ËùÓĞTCCµÄ½Úµã¼¯
+	for (auto vertex_deg : Mv)
 	{
 		int v = vertex_deg.first;
 		int r = find(v);
 		ccv_set[r].push_back(v);
 	}
-	for (int i = head; ~i; i = tsnxt[i])//±éÀúTKCËùÓĞÊ±Ì¬±ß,ÊÕ¼¯TCCµÄÊ±¼ä´Á¼¯
+	for (int i = head; ~i; i = tsnxt[i])
 	{
 		int t = tsarc[i];
 		for (int j = ht[t]; ~j; j = tnxt[j])
@@ -2825,7 +2789,7 @@ void compute_tcc_prop_set(ZONE tz, int k)//»ñÈ¡Time ZoneµÄTKC¶ÔÓ¦TCCµÄÈı¸öProper
 			cct_set[r].push_back(ts);
 		}
 	}
-	for (int i = 0; i < VMAX; ++i)//°ÑÃ¿¸öTCCÖĞµÄ½ÚµãIDºÍÊ±¼ä´ÁÉıĞòÅÅĞò,ÓÃÓÚÕÒµ½×îĞ¡µÄ½Úµã±àºÅºÍ×îĞ¡×î´óÊ±¼ä´Á
+	for (int i = 0; i < VMAX; ++i)
 	{
 		if (ccv_set[i].size())
 		{
@@ -2833,9 +2797,9 @@ void compute_tcc_prop_set(ZONE tz, int k)//»ñÈ¡Time ZoneµÄTKC¶ÔÓ¦TCCµÄÈı¸öProper
 			sort(cct_set[i].begin(), cct_set[i].end());
 		}
 	}
-	for (auto edge_freq : Mc)//ÔÙ´Î±éÀúËùÓĞconnection,¼ÆËãcce_cnt
+	for (auto edge_freq : Mc)
 	{
-		//±éÀúTKCµÄËùÓĞconnection,°ÑËùÔÚµÄTCCµÄconnectionÊıÁ¿Ôö¼Ó1
+		
 		int u = edge_freq.first.first;
 		int v = edge_freq.first.second;
 		int r = find(u);
@@ -2843,30 +2807,28 @@ void compute_tcc_prop_set(ZONE tz, int k)//»ñÈ¡Time ZoneµÄTKC¶ÔÓ¦TCCµÄÈı¸öProper
 	}
 }
 
-void compute_tcc_prop_set_c(int ts, int te, int k)//»ñÈ¡Ä³¸öTKC¶ÔÓ¦TCCµÄÈı¸öProperty Set, ÊäÈëÎªTKC²ÎÊı
+void compute_tcc_prop_set_c(int ts, int te, int k)//è·å–æŸä¸ªTKCå¯¹åº”TCCçš„ä¸‰ä¸ªProperty Set, è¾“å…¥ä¸ºTKCå‚æ•°
 {
-	//ÏÂÃæÈıĞĞ³õÊ¼»¯TKCµÄTELºÍÈı¸ö¸¨Öú½á¹¹
+
 	buildtel(ts, te);
 	initMH(ts, te);
 	decomp(k);
 
-	//ÏÂÃæ´úÂë¿é»ñÈ¡TKCµÄ¸÷¸öTCC,±£´æµ½Èı¸öTCC Property Set
-	//(u,v)´ú±íÒ»¸öconnectionµÄÁ½¸ö¶Ëµã,r´ú±í´¦ÀíµÄµã»ò±ßËùÔÚµÄTCC±àºÅ(¼´²¢²é¼¯´ú±íÔª)
 
-	init_p();//³õÊ¼»¯²¢²é¼¯
-	for (auto edge_freq : Mc)//±éÀúTKCËùÓĞconnection,¹¹½¨tkcÁ¬Í¨ĞÔµÄ²¢²é¼¯
+	init_p();
+	for (auto edge_freq : Mc)
 	{
 		int u = edge_freq.first.first;
 		int v = edge_freq.first.second;
 		combine(u, v);
 	}
-	for (auto vertex_deg : Mv)//±éÀúTKCËùÓĞ½áµã,ÊÕ¼¯ËùÓĞTCCµÄ½Úµã¼¯
+	for (auto vertex_deg : Mv)
 	{
 		int v = vertex_deg.first;
 		int r = find(v);
 		ccv_set[r].push_back(v);
 	}
-	for (int i = head; ~i; i = tsnxt[i])//±éÀúTKCËùÓĞÊ±Ì¬±ß,ÊÕ¼¯TCCµÄÊ±¼ä´Á¼¯ºÏÊ±Ğò±ß¼¯
+	for (int i = head; ~i; i = tsnxt[i])
 	{
 		int t = tsarc[i];
 		for (int j = ht[t]; ~j; j = tnxt[j])
@@ -2880,7 +2842,7 @@ void compute_tcc_prop_set_c(int ts, int te, int k)//»ñÈ¡Ä³¸öTKC¶ÔÓ¦TCCµÄÈı¸öProp
 			cce_set[r].push_back(eid);
 		}
 	}
-	for (int i = 0; i < VMAX; ++i)//°ÑÃ¿¸öTCCÖĞµÄ½ÚµãIDºÍÊ±¼ä´ÁÉıĞòÅÅĞò,ÓÃÓÚÕÒµ½×îĞ¡µÄ½Úµã±àºÅºÍ×îĞ¡×î´óÊ±¼ä´Á
+	for (int i = 0; i < VMAX; ++i)
 	{
 		if (ccv_set[i].size())
 		{
@@ -2888,9 +2850,9 @@ void compute_tcc_prop_set_c(int ts, int te, int k)//»ñÈ¡Ä³¸öTKC¶ÔÓ¦TCCµÄÈı¸öProp
 			sort(cct_set[i].begin(), cct_set[i].end());
 		}
 	}
-	for (auto edge_freq : Mc)//ÔÙ´Î±éÀúËùÓĞconnection,¼ÆËãcce_cnt
+	for (auto edge_freq : Mc)
 	{
-		//±éÀúTKCµÄËùÓĞconnection,°ÑËùÔÚµÄTCCµÄconnectionÊıÁ¿Ôö¼Ó1
+		
 		int u = edge_freq.first.first;
 		int v = edge_freq.first.second;
 		int r = find(u);
@@ -2900,38 +2862,35 @@ void compute_tcc_prop_set_c(int ts, int te, int k)//»ñÈ¡Ä³¸öTKC¶ÔÓ¦TCCµÄÈı¸öProp
 
 template<typename T>
 struct OPT_TCC_FOUND {
-	/*** ÏÂÃæÈı¸öÊôĞÔÎ¨Ò»È·¶¨Ò»¸öTCC ***/
-	int TTI_TS;//TCCÄÚµÄ×îĞ¡Ê±¼ä´Á
-	int TTI_TE;//TCCÄÚµÄ×î´óÊ±¼ä´Á
-	int MIN_VERTEX;//TCCÄÚµÄ½ÚµãidµÄ×îĞ¡Öµ
+	
+	int TTI_TS;
+	int TTI_TE;
+	int MIN_VERTEX;
 
-	/*** LSÖĞµ±Ç°×îÓÅTCCµÄXÖµ ***/
 	T x_value;
 };
 
-void LS_BURST(int k)//X=BURSTINESSµÄLocalSearch,º¯ÊıÊäÈëÎªtime zoneµÄ¼¯ºÏ(zone_set),kÎªTXCQ²ÎÊı£¬·µ»ØBURSTINESS×î´óµÄTCC(ÓÃÈıÔª×é±íÊ¾)
+void LS_BURST(int k)
 {
-	OPT_TCC_FOUND<double> opt_tcc_burst = {-1, -1, -1, 0.0};//ÓÃÓÚ¼ÇÂ¼LS¹ı³ÌÖĞBURSTINESS×î´óµÄTCC
-	for (auto tz : zone_set)//µ÷ÓÃÇ°zone_set±ØĞëÒÑ¾­Í¨¹ıZPar_O³õÊ¼»¯
+	OPT_TCC_FOUND<double> opt_tcc_burst = {-1, -1, -1, 0.0};
+	for (auto tz : zone_set)
 	{
-		init_tcc_prop_set();//×¼±»»ñÈ¡Ò»¸öĞÂTKCµÄËùÓĞTCC,ÏÈÇå¿Õ¶ÔÓ¦½á¹û¼¯
+		init_tcc_prop_set();
 
-		compute_tcc_prop_set(tz, k);//¼ÆËãTKCµÄTCC£¬±£´æµ½Èı¸öProperty Set
+		compute_tcc_prop_set(tz, k);
 
 		for (int i = 0; i < VMAX; ++i)
 		{
 			if (ccv_set[i].size())
 			{
-				//»ñÈ¡µ½Õâ¸öTCCµÄ±ê¼ÇÈıÔª×é
+				
 				int TTI_TS = *cct_set[i].begin();
 				int TTI_TE = *(--cct_set[i].end());
 				int MIN_VERTEX = *ccv_set[i].begin();
-				int span_day = (consecutive_timestamp[TTI_TE - 1] - consecutive_timestamp[TTI_TS - 1]) / 86400 + 1;//¶ÔÓÚ-dayÊı¾İ¼¯£¬spanÎªÌìÊı
-				double tcc_burstiness = (double)cce_cnt[i] * 2.0 / (double)span_day;//¼ÆËãTCCµÄburstiness,×¢Òâ·ÖÄ¸ĞèÒª¼Ó1,ÒòÎªTTI_TS¿ÉÄÜºÍTTI_TEÏàÍ¬
-				//double tcc_burstiness = (double)ccv_set[i].size() / (double)((double)TTI_TE - TTI_TS + 1.0);
-				//printf("burstiness [%d, %d, %d], %.2lf\n", TTI_TS, TTI_TE, MIN_VERTEX, tcc_burstiness);
-
-				if (opt_tcc_burst.TTI_TS == -1 || opt_tcc_burst.x_value < tcc_burstiness)//ÓÉÓÚÊÇOptimizing Query,ÇÒX¼ÆËãÎª³£Êı¿ªÏú,Òò´Ë²»ÓÃ¿¼ÂÇdominating¹ØÏµµÄTCC±»¶à´Î¿¼ÂÇµÄÎÊÌâ
+				int span_day = (consecutive_timestamp[TTI_TE - 1] - consecutive_timestamp[TTI_TS - 1]) / 86400 + 1;
+				double tcc_burstiness = (double)cce_cnt[i] * 2.0 / (double)span_day;
+			
+				if (opt_tcc_burst.TTI_TS == -1 || opt_tcc_burst.x_value < tcc_burstiness)
 				{
 					opt_tcc_burst = { TTI_TS, TTI_TE, MIN_VERTEX, tcc_burstiness };
 				}
@@ -2943,51 +2902,51 @@ void LS_BURST(int k)//X=BURSTINESSµÄLocalSearch,º¯ÊıÊäÈëÎªtime zoneµÄ¼¯ºÏ(zone_s
 	printf("TCC with maximum burstiness: [%d, %d, %d] \n", opt_tcc_burst.TTI_TS, opt_tcc_burst.TTI_TE, opt_tcc_burst.MIN_VERTEX);
 }
 
-struct TCC_SZ {//TCC SIZEµÄ½á¹¹Ìå£¬ÓÃÓÚ²éÕÒSIZE top-kĞ¡µÄTCC
-	int ts, te, vid;//element key,uniquely identify a TCC
+struct TCC_SZ {
+	int ts, te, vid;
 	int val;
-	bool operator<(const TCC_SZ& another) const//¶Ô¡°µÍÓÅÏÈ¼¶¡±½øĞĞ¶¨Òå,·µ»Øtrue´ú±íÓÅÏÈ¼¶¡°µÍÓÚ¡±
+	bool operator<(const TCC_SZ& another) const
 	{
-		return val < another.val;//ÎÒÃÇ¶ÔÓ¦SIZEÒªtop-KĞ¡µÄ,Òò´ËÕâÀïĞèÒªÒ»¸ö´ó¶¥¶Ñ£¬¼´valÔ½Ğ¡ÓÅÏÈ¼¶Ô½µÍ
+		return val < another.val;
 	}
 };
 
-void LS_SIZE(int K, int k)//X=SIZEµÄLocalSearch,º¯ÊıÊäÈëÎªtime zoneµÄ¼¯ºÏ(zone_set),KÎªÖ¸¶¨²ÎÊı,»ñÈ¡SIZE×îĞ¡µÄK¸öTCC,kÎªTXCQÖĞµÄk
+void LS_SIZE(int K, int k)
 {
-	//priority_queue, ¶Ñ¶¥ÔªËØ¾ßÓĞ×î¸ßÓÅÏÈ¼¶
+	
 	priority_queue<TCC_SZ, vector<TCC_SZ>> heap_for_max_k;
-	//Î¬»¤¶ÓÖĞÔªËØµÄkey¼¯ºÏ,ÓÃÓÚÊµÏÖÈ¥ÖØ,ÒòÎªÍ¬Ò»¸öTCC¿ÉÄÜ´æÔÚÓë¶à¸öDistinct Core,Òò´ËÃ¿¸öTCCÖ»´¦ÀíÒ»´Î
+	
 	set<pair<pair<int, int>, int>> heap_key;
-	for (auto tz : zone_set)//µ÷ÓÃÇ°zone_set±ØĞëÒÑ¾­Í¨¹ıZPar_O³õÊ¼»¯
+	for (auto tz : zone_set)
 	{
 		auto TTI = tz.first;
 		int ts = TTI.first, te = TTI.second;
-		for (int i = 0; i < VMAX; ++i) ccv_set[i].clear();//Çå¿Õccv_set
-		//ÏÂÃæÈıĞĞ³õÊ¼»¯tkcµÄTEL
+		for (int i = 0; i < VMAX; ++i) ccv_set[i].clear();
+		
 		buildtel(ts, te);
 		initMH(ts, te);
 		decomp(k);
-		init_p();//³õÊ¼»¯²¢²é¼¯
-		for (auto edge_freq : Mc)//¹¹½¨tkcÁ¬Í¨ĞÔµÄ²¢²é¼¯
+		init_p();
+		for (auto edge_freq : Mc)
 		{
 			int u = edge_freq.first.first;
 			int v = edge_freq.first.second;
 			combine(u, v);
 		}
-		for (auto vertex_deg : Mv)//ÊÕ¼¯ËùÓĞTCCµÄ½Úµã¼¯,rvÎªÒ»¸öTCCµÄ´ú±í½Úµã±àºÅ
+		for (auto vertex_deg : Mv)
 		{
 			int v = vertex_deg.first;
 			int rv = find(v);
 			ccv_set[rv].push_back(v);
 		}
-		for (int i = 0; i < VMAX; ++i)//°ÑÃ¿¸öTCCÖĞµÄ½Úµã±êºÅÉıĞòÅÅĞò,ÓÃÓÚÕÒµ½×îĞ¡µÄ½Úµã±àºÅ
+		for (int i = 0; i < VMAX; ++i)
 		{
 			if (ccv_set[i].size())
 			{
 				sort(ccv_set[i].begin(), ccv_set[i].end());
 			}
 		}
-		for (int i = head; ~i; i = tsnxt[i])//ÊÕ¼¯ËùÓĞTCCµÄÊ±¼ä´Á¼¯,rÎªÒ»¸öTCCµÄ´ú±í½Úµã±àºÅ
+		for (int i = head; ~i; i = tsnxt[i])
 		{
 			int t = tsarc[i];
 			for (int j = ht[t]; ~j; j = tnxt[j])
@@ -3005,15 +2964,15 @@ void LS_SIZE(int K, int k)//X=SIZEµÄLocalSearch,º¯ÊıÊäÈëÎªtime zoneµÄ¼¯ºÏ(zone_s
 			if (ccv_set[i].size())
 			{
 				TCC_SZ tcc_sz = { *cct_set[i].begin(), *(--cct_set[i].end()), *ccv_set[i].begin(), (int)ccv_set[i].size() };
-				if (heap_key.find({ {tcc_sz.ts, tcc_sz.te}, tcc_sz.vid }) != heap_key.end())//¸ÃTCCÒÑ¾­´¦Àí¹ıÁË
+				if (heap_key.find({ {tcc_sz.ts, tcc_sz.te}, tcc_sz.vid }) != heap_key.end())
 				{
 					continue;
 				}
-				heap_key.insert({ {tcc_sz.ts, tcc_sz.te}, tcc_sz.vid });//±ê¼ÇÎªÒÑ´¦Àí¹ı
-				if (heap_for_max_k.size() < K || (heap_for_max_k.top().val > tcc_sz.val))//Èç¹û¶Ô²»ÂúK¸ö»òÕâ¸öTCCµÄsizeĞ¡ÓÚ¶Ñ¶¥,Ôò¸üĞÂ¶Ñ
+				heap_key.insert({ {tcc_sz.ts, tcc_sz.te}, tcc_sz.vid });
+				if (heap_for_max_k.size() < K || (heap_for_max_k.top().val > tcc_sz.val))
 				{
-					if (heap_for_max_k.size() == K) heap_for_max_k.pop();//¶ÑÒÑ¾­ÂúK¸ö,ÒÆ³ı¶Ñ¶¥
-					heap_for_max_k.push(tcc_sz);//Èë¶Ñ
+					if (heap_for_max_k.size() == K) heap_for_max_k.pop();
+					heap_for_max_k.push(tcc_sz);
 				}
 			}
 		}
@@ -3022,13 +2981,13 @@ void LS_SIZE(int K, int k)//X=SIZEµÄLocalSearch,º¯ÊıÊäÈëÎªtime zoneµÄ¼¯ºÏ(zone_s
 
 void o_tcc_edge_list(int ts, int te, int k, int v, string file_name)
 {
-	init_tcc_prop_set();//×¼±»»ñÈ¡Ò»¸öĞÂTKCµÄËùÓĞTCC,ÏÈÇå¿Õ¶ÔÓ¦½á¹û¼¯
-	compute_tcc_prop_set_c(ts, te, k);//¼ÆËãTKCµÄTCC£¬±£´æµ½Èı¸öProperty Set
+	init_tcc_prop_set();
+	compute_tcc_prop_set_c(ts, te, k);
 	for (int i = 0; i < VMAX; ++i)
 	{
 		if (ccv_set[i].size())
 		{
-			if (ccv_set[i][0] == v)//È·ÈÏÎªĞèÒªµÄTCCÊä³ö
+			if (ccv_set[i][0] == v)
 			{
 				ofstream ofile(file_name.c_str());
 				ofile << "Source" << "," << "Target" << "," << "Timestamp" << "\n";
@@ -3036,7 +2995,7 @@ void o_tcc_edge_list(int ts, int te, int k, int v, string file_name)
 				{
 					ofile << arcs[eid].src << ',' << arcs[eid].dst << ',' << arcs[eid].t << '\n';
 				}
-				break;//Ö¸¶¨µÄTCCÊÇÎ¨Ò»µÄ,Êä³öºóÖ±½Óbreak
+				break;
 			}
 		}
 	}
@@ -3086,8 +3045,8 @@ void initMH_with_given_edge(vector<int> edge_list)
 
 void induce_k_h_core(int ts, int te, int k, int h)
 {
-	unordered_map<pair<int, int>, int, pair_hash> conn_stre;//±£´æ[ts,te]ÏÂ¸÷ÌõconnectionµÄstrength
-	for (int i = 0; i < arcn; ++i)//³õÊ¼»¯[ts,te]ÏÂ¸÷ÌõconnectionµÄstrength
+	unordered_map<pair<int, int>, int, pair_hash> conn_stre;
+	for (int i = 0; i < arcn; ++i)
 		if (arcs[i].t >= ts && arcs[i].t <= te)
 		{
 			if (conn_stre.find({ arcs[i].src, arcs[i].dst }) == conn_stre.end())
@@ -3097,13 +3056,12 @@ void induce_k_h_core(int ts, int te, int k, int h)
 			conn_stre[{arcs[i].src, arcs[i].dst}] ++;
 		}
 	vector<int> edge_list;
-	for(int i = 0; i < arcn; ++ i)//»ñÈ¡[ts,te]ÏÂconnection strength²»Ğ¡ÓÚhµÄËùÓĞconnection°üº¬µÄÊ±Ì¬±ß¼¯
+	for(int i = 0; i < arcn; ++ i)
 		if (arcs[i].t >= ts && arcs[i].t <= te)
 			if (conn_stre[{arcs[i].src, arcs[i].dst}] >= h)
 			{
 				edge_list.push_back(i);
 			}
-	//ÀûÓÃedge_list³õÊ¼»¯[ts,te]ÏÂ(k,h)-coreµÄTEL,Mc,Mv,Hv
 	buildtel_with_given_edge(edge_list);
 	initMH_with_given_edge(edge_list);
 	decomp(k);
