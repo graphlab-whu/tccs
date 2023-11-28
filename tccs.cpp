@@ -1,3 +1,10 @@
+/*** 
+This file contains three parts:
+Firstly, the implementation of TEL and OTCD.
+Secondly, the implementation of OTCD* for zone partition.
+Thirdly, the implementation of TCCS, namely functionalities of EF-Index.
+For each key function, we add a brief introduction.
+***/
 #define _CRT_SECURE_NO_WARNINGS
 #include<malloc.h>
 #include<iostream>
@@ -125,6 +132,7 @@ struct Q {
 }q[QMAX];
 int qcnt = 0;
 
+//load the temporal graph, and remap discrete timestamps and vertex numbers to consecutive integers
 void loadgraph(const char* name)
 {
 	ifstream fin(name, ios::in);
@@ -181,6 +189,7 @@ void loadgraph(const char* name)
 	InitOrderArcSet();
 
 }
+
 
 void loadtest(const char* name)
 {
@@ -250,6 +259,7 @@ void vUpd(int v)
 	Mv[v] --;
 }
 
+//The truncation phase of TCD operation
 void trunc(int l, int r)
 {
 	int hh = head, tt = tail;
@@ -290,6 +300,7 @@ void trunc(int l, int r)
 	head = hh, tail = tt;
 }
 
+//The decomposition phase of TCD operation
 void decomp(int k)
 {
 	while (Hv.size() && (Hv.begin()->first<k))
@@ -325,6 +336,7 @@ void decomp(int k)
 	}
 }
 
+//The TCD Operation
 void tcdop(int l, int r, int k)
 {
 	trunc(l, r);
@@ -439,6 +451,7 @@ const int MAX_SPAN = 11000;
 
 void proc(int ts, int te, int ts_i, int te_i);
 
+//The TCD algorithm
 void tcd(int ql, int qr, int qk)
 {
 	int ts = ql;
@@ -460,6 +473,7 @@ void tcd(int ql, int qr, int qk)
 	}
 }
 
+//The OTCD algorithm
 set<pair<int, int>> tti_set;
 void otcd(int ql, int qr, int qk)
 {
@@ -519,6 +533,7 @@ void otcd(int ql, int qr, int qk)
 	}
 }
 
+//Function that initializes a TEL
 void buildtel(int l, int r)
 {
 	memset(hs, -1, VMAX * sizeof(int));
@@ -1388,6 +1403,7 @@ int core_decomposition()
 	return k - 1;
 }
 
+//The basic function that creates the lineage graph based on retrieved time zones.
 void lg_construct(EF_Index* ef)
 {
 	buildtel(ef->_TS, ef->_TE);
@@ -1479,6 +1495,7 @@ void compute_layer_number(EF_Index* ef)
 	delete[] in_queue;
 }
 
+//The initial chain partition function
 void chain_partition(EF_Index* ef, vector<vector<int>>& chain_set)
 {
 	compute_layer_number(ef);
@@ -1653,6 +1670,7 @@ void compute_inc_edge(EF_Index* ef, vector<int>& chain, vector<vector<int>>& inc
 
 }
 
+//This function construct a specific MTSF, corresponds to MTSF Construction.
 void construct_forest(EF_Index* ef, ELF& elf, vector<int>& chain, vector<vector<int>>& inc_edge)
 {
 	int n = chain.size() - 1;
@@ -1743,6 +1761,7 @@ int recover_ts(int t)
 	return t;
 }
 
+//The following functions dump different properties of an EF-Index
 void ef_dump_chain_set(EF_Index* ef)
 {
 	printf("The EF_Index contains the following chains:\n");
@@ -1820,7 +1839,7 @@ void ef_dump(EF_Index* ef)
 	printf("\n");
 }
 
-
+//This is the entry of TCCS query in main
 void optimal_tccs(EF_Index* ef, int query_span_ts, int query_span_te, int query_k, int query_vertex, vector<int>& res)
 {
 	if (ef->_K != query_k)
@@ -2103,6 +2122,7 @@ bool find_aug_path(int x)
 
 vector<int> chain_set_dst[N];
 
+//This is the optimal chain partition function
 void chain_partition_opt(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pair<int, int>, int, pair_hash>& TTI2ID)
 {
 	memset(h, -1, sizeof h);
@@ -2204,6 +2224,7 @@ void create_elf_of_chain_o(EF_Index* ef, int elf_id, vector<int>& chain)
 
 }
 
+//This is the accelerated version of building MTSF for each chain
 void create_elf_o(EF_Index* ef, vector<vector<int>>& chain_set, unordered_map<pair<int, int>, int, pair_hash>& TTI2ID, int ql, int qr, int qk)
 {
 	size_t number_of_elf = chain_set.size();
@@ -2411,6 +2432,7 @@ void print_tccs_ol_clapse_per_cc(int Ts, int Te, int _ts, int _te, int _k)
 
 }
 
+//This function represents the updating method of EF-Index
 void ef_expand_forward(EF_Index* ef, int TE)
 {
 	int _TS = ef->_TS;
