@@ -1,7 +1,12 @@
+/*** 
+This file contains the definitions of data structures in EF-Index
+***/
+
 #ifndef EF_H
 #define EF_H
 #include<vector>
 
+//L_NODE defines the node structure of lineage graph
 class L_NODE {
 public:
 	std::vector<int> nxt_nd;
@@ -12,6 +17,7 @@ public:
 	int layer_number;
 };
 
+//A_NODE defines the entry of the lookup structure
 class A_NODE {
 public:
 	int ts, te;
@@ -22,6 +28,7 @@ public:
 	}
 };
 
+//ELF defines the structure of an MTSF
 class ELF {
 public:
 	int v_num;
@@ -52,7 +59,7 @@ public:
 	void tccs_proc(int query_vertex, int query_ts, int query_te, std::vector<int>& ans);
 };
 
-
+//EF_Index is the overall index proposed to handle TCCS
 class EF_Index {
 public:
 	int _TS, _TE, _K;
@@ -78,7 +85,7 @@ public:
 		elf_list = nullptr;
 	}
 	
-	void tccs(int query_ts, int query_te, int query_vertex, std::vector<int>& set_of_vertex);
+	void tccs(int query_ts, int query_te, int query_vertex, std::vector<int>& set_of_vertex); //This function is the interface to answer a TCCS query
 	int get_evo_entry(int query_ts, int query_te);
 	int get_target_lineage_node(int start_node, int query_ts, int query_te);
 };
