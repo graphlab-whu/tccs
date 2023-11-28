@@ -1,3 +1,6 @@
+/*** 
+This file contains the inner functionalities of EF-Index
+***/
 #include "ef.h"
 #include<chrono>
 #include<algorithm>
@@ -7,6 +10,7 @@ using std::chrono::nanoseconds;
 using std::chrono::system_clock;
 using std::chrono::high_resolution_clock;
 
+//Locate the first lineage node to move to
 int EF_Index::get_evo_entry(int query_ts, int query_te)
 {
 	int l = 0, r = length_of_evo_array - 1;
@@ -24,6 +28,7 @@ int EF_Index::get_evo_entry(int query_ts, int query_te)
 	return evo_entry;
 }
 
+//The lookup procedure, which finds the lineage node corresponding to the distinct core
 int EF_Index::get_target_lineage_node(int start_node, int query_ts, int query_te)
 {
 	int current_node = start_node;
@@ -49,6 +54,7 @@ int EF_Index::get_target_lineage_node(int start_node, int query_ts, int query_te
 	return target_node;
 }
 
+//The final function inside EF-Index that handles a TCCS query
 void EF_Index::tccs(int query_ts, int query_te, int query_vertex, std::vector<int>& set_of_vertex)
 {
 	int evo_entry = get_evo_entry(query_ts, query_te);
@@ -68,6 +74,7 @@ void EF_Index::tccs(int query_ts, int query_te, int query_vertex, std::vector<in
 	elf_list[target_elf].tccs_proc(query_vertex, query_ts, query_te, set_of_vertex);
 }
 
+//The real dfs on MTSF
 void ELF::dfs_on_forest(int v, int ts, int te, int fa, std::vector<int>& ans)
 {
 	ans.push_back(v);
@@ -82,6 +89,7 @@ void ELF::dfs_on_forest(int v, int ts, int te, int fa, std::vector<int>& ans)
 	}
 }
 
+//The inner interface function that processes a TCCS instance
 void ELF::tccs_proc(int query_vertex, int query_ts, int query_te, std::vector<int>& ans)
 {
 	int forest_vertex = elf_vertex_id(query_vertex);
