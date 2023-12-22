@@ -3,7 +3,7 @@ This file contains three parts:
 Firstly, the implementation of TEL and OTCD.
 Secondly, the implementation of OTCD* for zone partition.
 Thirdly, the implementation of TCCS, namely functionalities of EF-Index.
-For each key function that is newly proposed in the paper, we add a brief introduction.
+For each key function that is newly proposed in the paper, we add a brief introduction before definition.
 ***/
 #define _CRT_SECURE_NO_WARNINGS
 #include<malloc.h>
